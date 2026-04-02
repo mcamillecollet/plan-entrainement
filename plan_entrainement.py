@@ -40,19 +40,23 @@ def analyser_gpx(gpx_file):
         else:
             if cote_distance >= 0.5:
                 pente = (cote_elevation / (cote_distance * 1000)) * 100
-                cotes.append({'start_km': cote_distance_start := cum_d - cote_distance, 
-                              'end_km': cum_d, 
-                              'distance_km': cote_distance, 
-                              'pente_pct': round(pente,1)})
+                cotes.append({
+                    'start_km': cum_d - cote_distance,
+                    'end_km': cum_d,
+                    'distance_km': cote_distance,
+                    'pente_pct': round(pente,1)
+                })
             cote_distance = 0
             cote_elevation = 0
 
     if cote_distance >= 0.5:
         pente = (cote_elevation / (cote_distance * 1000)) * 100
-        cotes.append({'start_km': cum_d - cote_distance, 
-                      'end_km': cum_d,
-                      'distance_km': cote_distance, 
-                      'pente_pct': round(pente,1)})
+        cotes.append({
+            'start_km': cum_d - cote_distance,
+            'end_km': cum_d,
+            'distance_km': cote_distance,
+            'pente_pct': round(pente,1)
+        })
     
     analyse = {
         'distance_totale_km': df['cum_distance'].iloc[-1],
