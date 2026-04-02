@@ -22,31 +22,27 @@ def analyser_gpx(gpx_file):
     if df.empty:
         return None
     
-    # Calcul distance entre points (approximation)
-    df['distance'] = np.sqrt((df['latitude'].diff()**2) + (df['longitude'].diff()**2)).fillna(0) * 111  # km approx
+    df['distance'] = np.sqrt((df['latitude'].diff()**2) + (df['longitude'].diff()**2)).fillna(0) * 111
     df['cum_distance'] = df['distance'].cumsum()
     df['elevation_diff'] = df['elevation'].diff().fillna(0)
     
-    # D+ total
     D_plus = df.loc[df['elevation_diff'] > 0, 'elevation_diff'].sum()
     
-    # Identifier les côtes >1 km
     cotes = []
     cote_distance = 0
     cote_elevation = 0
     
     for d, e, cum_d in zip(df['distance'], df['elevation_diff'], df['cum_distance']):
-        if e > 0:  # montée
+        if e > 0:
             cote_distance += d
             cote_elevation += e
-        else:  # descente ou plat
-            if cote_distance >= 1.0:  # seuil 1 km
+        else:
+            if cote_distance >= 1.0:
                 pente = (cote_elevation / (cote_distance * 1000)) * 100
                 cotes.append({'start_km': cum_d - cote_distance, 'end_km': cum_d, 'pente_pct': round(pente,1)})
             cote_distance = 0
             cote_elevation = 0
 
-    # dernière côte si non terminée
     if cote_distance >= 1.0:
         pente = (cote_elevation / (cote_distance * 1000)) * 100
         cotes.append({'start_km': cum_d - cote_distance, 'end_km': cum_d, 'pente_pct': round(pente,1)})
@@ -97,24 +93,29 @@ if uploaded_file is not None:
         fig, ax = plt.subplots(figsize=(10,4))
 
         # Ligne rouge
-        ax.plot(df['cum_distance'], df['elevation'], color='red')
+        ax.plot(df['cum_distance'], df['elevation'], color='red', linewidth=2)
 
-        # Fond gris (graphique + figure)
-        ax.set_facecolor('#f0f0f0')
-        fig.patch.set_facecolor('#e5e5e5')
+        # Fond gris clair partout
+        ax.set_facecolor('#d9d9d9')
+        fig.patch.set_facecolor('#d9d9d9')
 
-        ax.set_xlabel("Distance (km)")
-        ax.set_ylabel("Altitude (m)")
-        ax.set_title("Profil d'altitude du parcours")
-        
-        # Marquer les côtes >1 km avec leur pourcentage
+        # Police cohérente avec Streamlit
+        font = {'family':'sans-serif','size':12}
+        ax.set_xlabel("Distance (km)", fontdict=font)
+        ax.set_ylabel("Altitude (m)", fontdict=font)
+        ax.set_title("Profil d'altitude du parcours", fontdict={'family':'sans-serif','size':14,'weight':'bold'})
+
+        # Quadrillage clair
+        ax.grid(True, color='white', linestyle='--', linewidth=0.7, alpha=0.7)
+
+        # Marquer les côtes >1 km
         for cote in analyse['cotes']:
             mid = (cote['start_km'] + cote['end_km']) / 2
             h = df.loc[(df['cum_distance']>=cote['start_km']) & (df['cum_distance']<=cote['end_km']), 'elevation'].max()
             ax.annotate(f"{cote['pente_pct']}%", xy=(mid, h), xytext=(0,10), textcoords='offset points',
-                        ha='center', color='red', fontsize=9, fontweight='bold')
+                        ha='center', color='red', fontsize=10, fontweight='bold')
             ax.axvspan(cote['start_km'], cote['end_km'], color='red', alpha=0.1)
-        
+
         st.pyplot(fig)
         
         st.subheader("🏃 Plan d'entraînement 8 semaines")
