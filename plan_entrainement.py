@@ -38,15 +38,17 @@ def analyser_gpx(gpx_file):
             cote_distance += d
             cote_elevation += e
         else:
-            if cote_distance >= 0.5:
+            if cote_distance >= 0.5:  # seuil 0.5 km
                 pente = (cote_elevation / (cote_distance * 1000)) * 100
-                cotes.append({'start_km': cum_d - cote_distance, 'end_km': cum_d, 'pente_pct': round(pente,1)})
+                cotes.append({'start_km': cum_d - cote_distance, 'end_km': cum_d, 
+                              'distance_km': cote_distance, 'pente_pct': round(pente,1)})
             cote_distance = 0
             cote_elevation = 0
 
     if cote_distance >= 0.5:
         pente = (cote_elevation / (cote_distance * 1000)) * 100
-        cotes.append({'start_km': cum_d - cote_distance, 'end_km': cum_d, 'pente_pct': round(pente,1)})
+        cotes.append({'start_km': cum_d - cote_distance, 'end_km': cum_d,
+                      'distance_km': cote_distance, 'pente_pct': round(pente,1)})
     
     analyse = {
         'distance_totale_km': df['cum_distance'].iloc[-1],
@@ -122,7 +124,21 @@ if uploaded_file is not None:
             ax.axvspan(cote['start_km'], cote['end_km'], color='red', alpha=0.1)
 
         st.pyplot(fig)
-        
+
+        # --- Tableau des côtes ---
+        if analyse['cotes']:
+            cotes_table = pd.DataFrame(analyse['cotes'])
+            cotes_table.insert(0, 'N°', range(1, len(cotes_table)+1))  # numéro des côtes
+            cotes_table = cotes_table[['N°','start_km','end_km','distance_km','pente_pct']]
+            cotes_table.rename(columns={
+                'start_km':'Début (km)',
+                'end_km':'Fin (km)',
+                'distance_km':'Longueur (km)',
+                'pente_pct':'% Dénivelé'
+            }, inplace=True)
+            st.subheader("🗂️ Tableau des côtes (≥ 0.5 km)")
+            st.dataframe(cotes_table, use_container_width=True)
+
         st.subheader("🏃 Plan d'entraînement 8 semaines")
         plan_df = generer_plan(analyse['distance_totale_km'], analyse['D_plus_m'])
         st.dataframe(plan_df)
