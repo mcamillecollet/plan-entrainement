@@ -22,26 +22,35 @@ def analyser_gpx(gpx_file):
         return None
     
     # Calcul distance entre points (approximation)
-    df['distance'] = np.sqrt((df['latitude'].diff()**2) + (df['longitude'].diff()**2)).fillna(0) * 111  # en km approx
+    df['distance'] = np.sqrt((df['latitude'].diff()**2) + (df['longitude'].diff()**2)).fillna(0) * 111  # km approx
     df['elevation_diff'] = df['elevation'].diff().fillna(0)
     
     # D+ total
     D_plus = df.loc[df['elevation_diff'] > 0, 'elevation_diff'].sum()
     
-    # Identifier les côtes >1 km
+    # Identifier les côtes >1 km avec fusion si descente <1 km
     cotes = []
     cote_distance = 0
     cote_elevation = 0
+    descente_courte = 0
+    
     for d, e in zip(df['distance'], df['elevation_diff']):
         if e > 0:  # montée
-            cote_distance += d
+            cote_distance += d + descente_courte  # ajouter descente courte précédente
             cote_elevation += e
-        else:
-            if cote_distance >= 1.0:  # seuil 1 km
-                pente = (cote_elevation / (cote_distance * 1000)) * 100  # % pente
-                cotes.append({'distance_km': round(cote_distance,2), 'pente_pct': round(pente,1)})
-            cote_distance = 0
-            cote_elevation = 0
+            descente_courte = 0
+        else:  # descente
+            if cote_distance == 0:  # pas de côte en cours
+                continue
+            if d < 1.0:  # petite descente, on continue la côte
+                descente_courte += d
+            else:  # descente longue => clôturer côte si distance >1 km
+                if cote_distance >= 1.0:
+                    pente = (cote_elevation / (cote_distance * 1000)) * 100
+                    cotes.append({'distance_km': round(cote_distance,2), 'pente_pct': round(pente,1)})
+                cote_distance = 0
+                cote_elevation = 0
+                descente_courte = 0
     # dernière côte
     if cote_distance >= 1.0:
         pente = (cote_elevation / (cote_distance * 1000)) * 100
@@ -59,9 +68,6 @@ def analyser_gpx(gpx_file):
 
 # --- Fonction de génération du plan d'entraînement ---
 def generer_plan(distance, D_plus):
-    """
-    Génère un plan simple 8 semaines selon la distance et D+ du GPX.
-    """
     base_semaine = distance / 5
     denivele_factor = 1 + (D_plus / 1000)
     
