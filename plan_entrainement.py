@@ -1,4 +1,4 @@
-import streamlit as st
+vimport streamlit as st
 import gpxpy
 import pandas as pd
 import numpy as np
