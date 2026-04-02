@@ -1,8 +1,7 @@
-streamlit
-pandas
-matplotlib
-gpxpy
-numpy
-folium
-matplotlib
-streamlit-folium
+streamlit==1.30.0
+gpxpy==1.5.0
+pandas==2.2.0
+numpy==1.26.0
+matplotlib==3.8.0
+folium==0.17.1
+streamlit-folium==0.11.0
