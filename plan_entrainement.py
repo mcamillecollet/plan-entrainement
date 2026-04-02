@@ -8,7 +8,15 @@ from streamlit_folium import st_folium
 
 # --- Fonction d'analyse GPX ---
 def analyser_gpx(gpx_file):
-    gpx = gpxpy.parse(gpx_file)
+    # Lecture décodée pour compatibilité Streamlit
+    try:
+        gpx_content = gpx_file.read().decode("utf-8")
+    except Exception:
+        gpx_file.seek(0)
+        gpx_content = gpx_file.read()
+
+    gpx = gpxpy.parse(gpx_content)
+
     points = []
     for track in gpx.tracks:
         for segment in track.segments:
@@ -19,6 +27,7 @@ def analyser_gpx(gpx_file):
                     'elevation': point.elevation,
                     'time': point.time
                 })
+
     df = pd.DataFrame(points)
     
     if df.empty:
@@ -44,13 +53,22 @@ def analyser_gpx(gpx_file):
         else:  # descente ou plat
             if cote_distance >= 1.0:
                 pente = (cote_elevation / (cote_distance * 1000)) * 100
-                cotes.append({'start_km': cum_d - cote_distance, 'end_km': cum_d, 'pente_pct': round(pente,1)})
+                cotes.append({
+                    'start_km': cum_d - cote_distance,
+                    'end_km': cum_d,
+                    'pente_pct': round(pente,1)
+                })
             cote_distance = 0
             cote_elevation = 0
+
     # dernière côte
     if cote_distance >= 1.0:
         pente = (cote_elevation / (cote_distance * 1000)) * 100
-        cotes.append({'start_km': cum_d - cote_distance, 'end_km': cum_d, 'pente_pct': round(pente,1)})
+        cotes.append({
+            'start_km': cum_d - cote_distance,
+            'end_km': cum_d,
+            'pente_pct': round(pente,1)
+        })
     
     analyse = {
         'distance_totale_km': df['cum_distance'].iloc[-1],
@@ -78,14 +96,35 @@ def generer_plan(distance, D_plus):
         })
     return pd.DataFrame(plan)
 
-# --- Fonction pour extraire les points GPX pour la carte ---
-def extraire_points_gpx(gpx_file):
-    gpx = gpxpy.parse(gpx_file)
+# --- Nouvelle fonction pour extraire les points GPX (VERSION CORRIGÉE) ---
+def extraire_points_gpx(uploaded_file):
+    import gpxpy
+    import gpxpy.gpx
+
+    # Lire et décoder
+    try:
+        gpx_content = uploaded_file.read().decode("utf-8")
+    except Exception:
+        uploaded_file.seek(0)
+        gpx_content = uploaded_file.read()
+
+    # Parser GPX
+    try:
+        gpx = gpxpy.parse(gpx_content)
+    except Exception:
+        st.error("❌ Le fichier GPX est invalide ou mal formé.")
+        st.stop()
+
     points = []
     for track in gpx.tracks:
         for segment in track.segments:
             for point in segment.points:
                 points.append([point.latitude, point.longitude])
+
+    if len(points) == 0:
+        st.error("❌ Aucun point détecté dans le fichier GPX.")
+        st.stop()
+
     return points
 
 # --- Streamlit UI ---
@@ -94,6 +133,8 @@ st.title("Analyse GPX et Plan d'entraînement personnalisé")
 uploaded_file = st.file_uploader("📁 Upload ton fichier GPX", type=['gpx'])
 
 if uploaded_file is not None:
+    # IMPORTANT : remettre le curseur à zéro pour lecture multiple
+    uploaded_file.seek(0)
     analyse = analyser_gpx(uploaded_file)
     
     if analyse:
@@ -105,20 +146,21 @@ if uploaded_file is not None:
         
         # --- Carte interactive du parcours ---
         st.subheader("🗺️ Carte du parcours")
+
+        uploaded_file.seek(0)  # Relecture pour la carte
         points = extraire_points_gpx(uploaded_file)
+
         if points:
             map_center = points[0]
             m = folium.Map(location=map_center, zoom_start=13)
             folium.PolyLine(points, color="blue", weight=5, opacity=0.8).add_to(m)
             st_folium(m, width=700, height=500)
-        else:
-            st.write("Impossible d'extraire les points pour la carte.")
         
         # --- Graphique profil d'altitude ---
         st.subheader("📈 Profil d'altitude du parcours")
         df = analyse['df']
         fig, ax = plt.subplots(figsize=(10,4))
-        ax.plot(df['cum_distance'], df['elevation'], color='blue')
+        ax.plot(df['cum_distance'], df['elevation'])
         ax.set_xlabel("Distance (km)")
         ax.set_ylabel("Altitude (m)")
         ax.set_title("Profil d'altitude")
