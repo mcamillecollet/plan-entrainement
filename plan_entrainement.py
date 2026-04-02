@@ -21,29 +21,49 @@ def analyser_gpx(gpx_file):
     if df.empty:
         return None
     
-    df['distance'] = np.sqrt(
-        (df['latitude'].diff()**2) + 
-        (df['longitude'].diff()**2)
-    ).fillna(0)
-    df['duree'] = df['time'].diff().dt.total_seconds().fillna(0)
-    df['vitesse'] = df['distance'] / df['duree'].replace(0, np.nan)
+    # Calcul distance entre points (approximation)
+    df['distance'] = np.sqrt((df['latitude'].diff()**2) + (df['longitude'].diff()**2)).fillna(0) * 111  # en km approx
+    df['elevation_diff'] = df['elevation'].diff().fillna(0)
+    
+    # D+ total
+    D_plus = df.loc[df['elevation_diff'] > 0, 'elevation_diff'].sum()
+    
+    # Identifier les côtes >1 km
+    cotes = []
+    cote_distance = 0
+    cote_elevation = 0
+    for d, e in zip(df['distance'], df['elevation_diff']):
+        if e > 0:  # montée
+            cote_distance += d
+            cote_elevation += e
+        else:
+            if cote_distance >= 1.0:  # seuil 1 km
+                pente = (cote_elevation / (cote_distance * 1000)) * 100  # % pente
+                cotes.append({'distance_km': round(cote_distance,2), 'pente_pct': round(pente,1)})
+            cote_distance = 0
+            cote_elevation = 0
+    # dernière côte
+    if cote_distance >= 1.0:
+        pente = (cote_elevation / (cote_distance * 1000)) * 100
+        cotes.append({'distance_km': round(cote_distance,2), 'pente_pct': round(pente,1)})
     
     analyse = {
-        'distance_totale_km': df['distance'].sum() * 111,  # approx conversion deg -> km
-        'denivele_total_m': df['elevation'].diff().abs().sum(),
-        'vitesse_moyenne_kmh': df['vitesse'].mean() * 3.6,
-        'point_max_elevation_m': df['elevation'].max(),
-        'point_min_elevation_m': df['elevation'].min()
+        'distance_totale_km': df['distance'].sum(),
+        'altitude_min_m': df['elevation'].min(),
+        'altitude_max_m': df['elevation'].max(),
+        'D_plus_m': D_plus,
+        'cotes': cotes
     }
+    
     return analyse
 
 # --- Fonction de génération du plan d'entraînement ---
-def generer_plan(distance, denivele):
+def generer_plan(distance, D_plus):
     """
     Génère un plan simple 8 semaines selon la distance et D+ du GPX.
     """
-    base_semaine = distance / 5  # km de base pour chaque séance
-    denivele_factor = 1 + (denivele / 1000)  # ajuste selon le D+
+    base_semaine = distance / 5
+    denivele_factor = 1 + (D_plus / 1000)
     
     plan = []
     for semaine in range(1, 9):
@@ -66,13 +86,19 @@ if uploaded_file is not None:
     if analyse:
         st.subheader("📊 Analyse du parcours")
         st.write(f"Distance totale : {analyse['distance_totale_km']:.2f} km")
-        st.write(f"Dénivelé total : {analyse['denivele_total_m']:.0f} m")
-        st.write(f"Vitesse moyenne : {analyse['vitesse_moyenne_kmh']:.2f} km/h")
-        st.write(f"Altitude max : {analyse['point_max_elevation_m']:.0f} m")
-        st.write(f"Altitude min : {analyse['point_min_elevation_m']:.0f} m")
+        st.write(f"Altitude min : {analyse['altitude_min_m']:.0f} m")
+        st.write(f"Altitude max : {analyse['altitude_max_m']:.0f} m")
+        st.write(f"D+ total : {analyse['D_plus_m']:.0f} m")
+        
+        if analyse['cotes']:
+            st.write(f"Nombre de côtes > 1 km : {len(analyse['cotes'])}")
+            for i, cote in enumerate(analyse['cotes'], 1):
+                st.write(f"Côte {i} : {cote['distance_km']} km, pente {cote['pente_pct']} %")
+        else:
+            st.write("Pas de côte supérieure à 1 km détectée")
         
         st.subheader("🏃 Plan d'entraînement 8 semaines")
-        plan_df = generer_plan(analyse['distance_totale_km'], analyse['denivele_total_m'])
+        plan_df = generer_plan(analyse['distance_totale_km'], analyse['D_plus_m'])
         st.dataframe(plan_df)
         
     else:
