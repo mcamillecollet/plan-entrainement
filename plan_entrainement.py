@@ -37,13 +37,15 @@ def analyser_gpx(gpx_file):
             cote_distance += d
             cote_elevation += e
         else:
-            if cote_distance >= 1.0:
+            # on ajoute toutes les côtes, même <1 km
+            if cote_distance > 0:
                 pente = (cote_elevation / (cote_distance * 1000)) * 100
                 cotes.append({'start_km': cum_d - cote_distance, 'end_km': cum_d, 'pente_pct': round(pente,1)})
             cote_distance = 0
             cote_elevation = 0
 
-    if cote_distance >= 1.0:
+    # dernière côte si elle finit en montée
+    if cote_distance > 0:
         pente = (cote_elevation / (cote_distance * 1000)) * 100
         cotes.append({'start_km': cum_d - cote_distance, 'end_km': cum_d, 'pente_pct': round(pente,1)})
     
@@ -111,16 +113,12 @@ if uploaded_file is not None:
         # Axe x commence à 0
         ax.set_xlim(left=0)
 
-        # Marquer les côtes >1 km avec leur pourcentage
+        # Marquer toutes les côtes avec leur pourcentage
         for cote in analyse['cotes']:
-            # milieu de la côte pour placer le texte
             mid = (cote['start_km'] + cote['end_km']) / 2
-            # altitude maximale de la côte pour position verticale
             h = df.loc[(df['cum_distance']>=cote['start_km']) & (df['cum_distance']<=cote['end_km']), 'elevation'].max()
-            # annotation du pourcentage
             ax.annotate(f"{cote['pente_pct']}%", xy=(mid, h), xytext=(0,10), textcoords='offset points',
                         ha='center', color='red', fontsize=10, fontweight='bold')
-            # zone rouge semi-transparente pour visualiser la côte
             ax.axvspan(cote['start_km'], cote['end_km'], color='red', alpha=0.1)
 
         st.pyplot(fig)
