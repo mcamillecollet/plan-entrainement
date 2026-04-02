@@ -105,8 +105,11 @@ if uploaded_file is not None:
         ax.set_ylabel("Altitude (m)", fontdict=font)
         ax.set_title("Profil d'altitude du parcours", fontdict={'family':'sans-serif','size':14,'weight':'bold'})
 
-        # Quadrillage clair
-        ax.grid(True, color='white', linestyle='--', linewidth=0.7, alpha=0.7)
+        # Quadrillage noir
+        ax.grid(True, color='black', linestyle='--', linewidth=0.7)
+
+        # Forcer l'axe y à commencer à 0
+        ax.set_ylim(bottom=0)
 
         # Marquer les côtes >1 km
         for cote in analyse['cotes']:
