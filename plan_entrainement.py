@@ -1,50 +1,79 @@
 import streamlit as st
+import gpxpy
 import pandas as pd
-import matplotlib.pyplot as plt
+import numpy as np
 
-st.set_page_config(page_title="Plan Entraînement", layout="wide")
+# --- Fonction d'analyse GPX ---
+def analyser_gpx(gpx_file):
+    gpx = gpxpy.parse(gpx_file)
+    points = []
+    for track in gpx.tracks:
+        for segment in track.segments:
+            for point in segment.points:
+                points.append({
+                    'latitude': point.latitude,
+                    'longitude': point.longitude,
+                    'elevation': point.elevation,
+                    'time': point.time
+                })
+    df = pd.DataFrame(points)
+    
+    if df.empty:
+        return None
+    
+    df['distance'] = np.sqrt(
+        (df['latitude'].diff()**2) + 
+        (df['longitude'].diff()**2)
+    ).fillna(0)
+    df['duree'] = df['time'].diff().dt.total_seconds().fillna(0)
+    df['vitesse'] = df['distance'] / df['duree'].replace(0, np.nan)
+    
+    analyse = {
+        'distance_totale_km': df['distance'].sum() * 111,  # approx conversion deg -> km
+        'denivele_total_m': df['elevation'].diff().abs().sum(),
+        'vitesse_moyenne_kmh': df['vitesse'].mean() * 3.6,
+        'point_max_elevation_m': df['elevation'].max(),
+        'point_min_elevation_m': df['elevation'].min()
+    }
+    return analyse
 
-# Titre et introduction
-st.title("💪 Plan d'Entraînement Personnalisé")
-st.write("""
-Bienvenue dans votre application de planification d'entraînement !  
-Sélectionnez la semaine et découvrez vos séances de course et de renforcement.
-""")
+# --- Fonction de génération du plan d'entraînement ---
+def generer_plan(distance, denivele):
+    """
+    Génère un plan simple 8 semaines selon la distance et D+ du GPX.
+    """
+    base_semaine = distance / 5  # km de base pour chaque séance
+    denivele_factor = 1 + (denivele / 1000)  # ajuste selon le D+
+    
+    plan = []
+    for semaine in range(1, 9):
+        plan.append({
+            'Semaine': semaine,
+            'Endurance': round(base_semaine * 2 * denivele_factor, 1),
+            'Seuil': round(base_semaine * 1.2 * denivele_factor, 1),
+            'Vitesse': round(base_semaine * 0.8 * denivele_factor, 1)
+        })
+    return pd.DataFrame(plan)
 
-# Slider pour sélectionner la semaine
-semaine = st.slider("Choisissez la semaine", 1, 12, 1)
+# --- Streamlit UI ---
+st.title("Analyse GPX et Plan d'entraînement personnalisé")
 
-# Exemple de plan sur 12 semaines (jour par jour)
-plan = {
-    1: {"Lundi":"Course 3x10 min","Mercredi":"Renfo 2x15 min","Vendredi":"Course 20 min"},
-    2: {"Lundi":"Course 4x10 min","Mercredi":"Renfo 2x20 min","Vendredi":"Course 25 min"},
-    3: {"Lundi":"Course 3x15 min","Mercredi":"Renfo 3x15 min","Vendredi":"Repos actif"},
-    4: {"Lundi":"Course 25 min","Mercredi":"Renfo 3x20 min","Vendredi":"Course 30 min"},
-    5: {"Lundi":"Course 30 min","Mercredi":"Renfo 3x20 min","Vendredi":"Course fractionné"},
-    6: {"Lundi":"Course 35 min","Mercredi":"Renfo 3x25 min","Vendredi":"Repos actif"},
-    7: {"Lundi":"Course 40 min","Mercredi":"Renfo 3x25 min","Vendredi":"Course 30 min"},
-    8: {"Lundi":"Course fractionné","Mercredi":"Renfo 4x20 min","Vendredi":"Course 35 min"},
-    9: {"Lundi":"Course 45 min","Mercredi":"Renfo 4x25 min","Vendredi":"Repos actif"},
-    10: {"Lundi":"Course 50 min","Mercredi":"Renfo 4x25 min","Vendredi":"Course fractionné"},
-    11: {"Lundi":"Course 55 min","Mercredi":"Renfo 3x30 min","Vendredi":"Course 40 min"},
-    12: {"Lundi":"Course 60 min","Mercredi":"Renfo 3x30 min","Vendredi":"Repos actif"},
-}
+uploaded_file = st.file_uploader("📁 Upload ton fichier GPX", type=['gpx'])
 
-# Créer un DataFrame pour afficher joliment
-df_semaine = pd.DataFrame(plan[semaine].items(), columns=["Jour", "Séance"])
-st.subheader(f"Semaine {semaine} : Détails des séances")
-st.table(df_semaine)
-
-# Visualisation simple du volume d'entraînement
-volumes = []
-for jour in plan[semaine].values():
-    # extraire minutes approximatives
-    import re
-    minutes = re.findall(r'\d+', jour)
-    volumes.append(sum(int(m) for m in minutes) if minutes else 0)
-
-plt.figure(figsize=(6,3))
-plt.bar(df_semaine["Jour"], volumes, color='skyblue')
-plt.title(f"Volume approximatif en minutes - Semaine {semaine}")
-plt.ylabel("Minutes")
-st.pyplot(plt)
+if uploaded_file is not None:
+    analyse = analyser_gpx(uploaded_file)
+    
+    if analyse:
+        st.subheader("📊 Analyse du parcours")
+        st.write(f"Distance totale : {analyse['distance_totale_km']:.2f} km")
+        st.write(f"Dénivelé total : {analyse['denivele_total_m']:.0f} m")
+        st.write(f"Vitesse moyenne : {analyse['vitesse_moyenne_kmh']:.2f} km/h")
+        st.write(f"Altitude max : {analyse['point_max_elevation_m']:.0f} m")
+        st.write(f"Altitude min : {analyse['point_min_elevation_m']:.0f} m")
+        
+        st.subheader("🏃 Plan d'entraînement 8 semaines")
+        plan_df = generer_plan(analyse['distance_totale_km'], analyse['denivele_total_m'])
+        st.dataframe(plan_df)
+        
+    else:
+        st.error("Impossible d'analyser le fichier GPX.")
