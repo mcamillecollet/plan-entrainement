@@ -111,12 +111,16 @@ if uploaded_file is not None:
         # Axe x commence à 0
         ax.set_xlim(left=0)
 
-        # Marquer les côtes >1 km
+        # Marquer les côtes >1 km avec leur pourcentage
         for cote in analyse['cotes']:
+            # milieu de la côte pour placer le texte
             mid = (cote['start_km'] + cote['end_km']) / 2
+            # altitude maximale de la côte pour position verticale
             h = df.loc[(df['cum_distance']>=cote['start_km']) & (df['cum_distance']<=cote['end_km']), 'elevation'].max()
+            # annotation du pourcentage
             ax.annotate(f"{cote['pente_pct']}%", xy=(mid, h), xytext=(0,10), textcoords='offset points',
                         ha='center', color='red', fontsize=10, fontweight='bold')
+            # zone rouge semi-transparente pour visualiser la côte
             ax.axvspan(cote['start_km'], cote['end_km'], color='red', alpha=0.1)
 
         st.pyplot(fig)
