@@ -45,7 +45,8 @@ def analyser_gpx(gpx_file):
                 cotes.append({'start_km': cum_d - cote_distance, 'end_km': cum_d, 'pente_pct': round(pente,1)})
             cote_distance = 0
             cote_elevation = 0
-    # dernière côte
+
+    # dernière côte si non terminée
     if cote_distance >= 1.0:
         pente = (cote_elevation / (cote_distance * 1000)) * 100
         cotes.append({'start_km': cum_d - cote_distance, 'end_km': cum_d, 'pente_pct': round(pente,1)})
@@ -94,7 +95,14 @@ if uploaded_file is not None:
         # --- Graphique profil d'altitude ---
         df = analyse['df']
         fig, ax = plt.subplots(figsize=(10,4))
-        ax.plot(df['cum_distance'], df['elevation'], color='blue')
+
+        # Ligne rouge
+        ax.plot(df['cum_distance'], df['elevation'], color='red')
+
+        # Fond gris (graphique + figure)
+        ax.set_facecolor('#f0f0f0')
+        fig.patch.set_facecolor('#e5e5e5')
+
         ax.set_xlabel("Distance (km)")
         ax.set_ylabel("Altitude (m)")
         ax.set_title("Profil d'altitude du parcours")
