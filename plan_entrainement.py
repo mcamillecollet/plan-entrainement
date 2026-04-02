@@ -38,17 +38,21 @@ def analyser_gpx(gpx_file):
             cote_distance += d
             cote_elevation += e
         else:
-            if cote_distance >= 0.5:  # seuil 0.5 km
+            if cote_distance >= 0.5:
                 pente = (cote_elevation / (cote_distance * 1000)) * 100
-                cotes.append({'start_km': cum_d - cote_distance, 'end_km': cum_d, 
-                              'distance_km': cote_distance, 'pente_pct': round(pente,1)})
+                cotes.append({'start_km': cote_distance_start := cum_d - cote_distance, 
+                              'end_km': cum_d, 
+                              'distance_km': cote_distance, 
+                              'pente_pct': round(pente,1)})
             cote_distance = 0
             cote_elevation = 0
 
     if cote_distance >= 0.5:
         pente = (cote_elevation / (cote_distance * 1000)) * 100
-        cotes.append({'start_km': cum_d - cote_distance, 'end_km': cum_d,
-                      'distance_km': cote_distance, 'pente_pct': round(pente,1)})
+        cotes.append({'start_km': cum_d - cote_distance, 
+                      'end_km': cum_d,
+                      'distance_km': cote_distance, 
+                      'pente_pct': round(pente,1)})
     
     analyse = {
         'distance_totale_km': df['cum_distance'].iloc[-1],
@@ -125,17 +129,27 @@ if uploaded_file is not None:
 
         st.pyplot(fig)
 
-        # --- Tableau des côtes ---
+        # --- Tableau des côtes formaté ---
         if analyse['cotes']:
             cotes_table = pd.DataFrame(analyse['cotes'])
-            cotes_table.insert(0, 'N°', range(1, len(cotes_table)+1))  # numéro des côtes
-            cotes_table = cotes_table[['N°','start_km','end_km','distance_km','pente_pct']]
+            
+            # Formater les colonnes début, fin et longueur à 1 chiffre après la virgule
+            cotes_table['start_km'] = cotes_table['start_km'].map(lambda x: f"{x:.1f}")
+            cotes_table['end_km'] = cotes_table['end_km'].map(lambda x: f"{x:.1f}")
+            cotes_table['distance_km'] = cotes_table['distance_km'].map(lambda x: f"{x:.1f}")
+            
+            # Ajouter un espace avant le % pour la colonne pente
+            cotes_table['pente_pct'] = cotes_table['pente_pct'].map(lambda x: f"{x} %")
+            
+            # Réorganiser les colonnes
+            cotes_table = cotes_table[['start_km','end_km','distance_km','pente_pct']]
             cotes_table.rename(columns={
                 'start_km':'Début (km)',
                 'end_km':'Fin (km)',
                 'distance_km':'Longueur (km)',
                 'pente_pct':'% Dénivelé'
             }, inplace=True)
+
             st.subheader("🗂️ Tableau des côtes (≥ 0.5 km)")
             st.dataframe(cotes_table, use_container_width=True)
 
