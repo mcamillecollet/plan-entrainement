@@ -2,6 +2,7 @@ import streamlit as st
 import gpxpy
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
 # --- Fonction d'analyse GPX ---
 def analyser_gpx(gpx_file):
@@ -23,44 +24,38 @@ def analyser_gpx(gpx_file):
     
     # Calcul distance entre points (approximation)
     df['distance'] = np.sqrt((df['latitude'].diff()**2) + (df['longitude'].diff()**2)).fillna(0) * 111  # km approx
+    df['cum_distance'] = df['distance'].cumsum()
     df['elevation_diff'] = df['elevation'].diff().fillna(0)
     
     # D+ total
     D_plus = df.loc[df['elevation_diff'] > 0, 'elevation_diff'].sum()
     
-    # Identifier les côtes >1 km avec fusion si descente <1 km
+    # Identifier les côtes >1 km
     cotes = []
     cote_distance = 0
     cote_elevation = 0
-    descente_courte = 0
     
-    for d, e in zip(df['distance'], df['elevation_diff']):
+    for d, e, cum_d in zip(df['distance'], df['elevation_diff'], df['cum_distance']):
         if e > 0:  # montée
-            cote_distance += d + descente_courte  # ajouter descente courte précédente
+            cote_distance += d
             cote_elevation += e
-            descente_courte = 0
-        else:  # descente
-            if cote_distance == 0:  # pas de côte en cours
-                continue
-            if d < 1.0:  # petite descente, on continue la côte
-                descente_courte += d
-            else:  # descente longue => clôturer côte si distance >1 km
-                if cote_distance >= 1.0:
-                    pente = (cote_elevation / (cote_distance * 1000)) * 100
-                    cotes.append({'distance_km': round(cote_distance,2), 'pente_pct': round(pente,1)})
-                cote_distance = 0
-                cote_elevation = 0
-                descente_courte = 0
+        else:  # descente ou plat
+            if cote_distance >= 1.0:  # seuil 1 km
+                pente = (cote_elevation / (cote_distance * 1000)) * 100
+                cotes.append({'start_km': cum_d - cote_distance, 'end_km': cum_d, 'pente_pct': round(pente,1)})
+            cote_distance = 0
+            cote_elevation = 0
     # dernière côte
     if cote_distance >= 1.0:
         pente = (cote_elevation / (cote_distance * 1000)) * 100
-        cotes.append({'distance_km': round(cote_distance,2), 'pente_pct': round(pente,1)})
+        cotes.append({'start_km': cum_d - cote_distance, 'end_km': cum_d, 'pente_pct': round(pente,1)})
     
     analyse = {
-        'distance_totale_km': df['distance'].sum(),
+        'distance_totale_km': df['cum_distance'].iloc[-1],
         'altitude_min_m': df['elevation'].min(),
         'altitude_max_m': df['elevation'].max(),
         'D_plus_m': D_plus,
+        'df': df,
         'cotes': cotes
     }
     
@@ -96,12 +91,23 @@ if uploaded_file is not None:
         st.write(f"Altitude max : {analyse['altitude_max_m']:.0f} m")
         st.write(f"D+ total : {analyse['D_plus_m']:.0f} m")
         
-        if analyse['cotes']:
-            st.write(f"Nombre de côtes > 1 km : {len(analyse['cotes'])}")
-            for i, cote in enumerate(analyse['cotes'], 1):
-                st.write(f"Côte {i} : {cote['distance_km']} km, pente {cote['pente_pct']} %")
-        else:
-            st.write("Pas de côte supérieure à 1 km détectée")
+        # --- Graphique profil d'altitude ---
+        df = analyse['df']
+        fig, ax = plt.subplots(figsize=(10,4))
+        ax.plot(df['cum_distance'], df['elevation'], color='blue')
+        ax.set_xlabel("Distance (km)")
+        ax.set_ylabel("Altitude (m)")
+        ax.set_title("Profil d'altitude du parcours")
+        
+        # Marquer les côtes >1 km avec leur pourcentage
+        for cote in analyse['cotes']:
+            mid = (cote['start_km'] + cote['end_km']) / 2
+            h = df.loc[(df['cum_distance']>=cote['start_km']) & (df['cum_distance']<=cote['end_km']), 'elevation'].max()
+            ax.annotate(f"{cote['pente_pct']}%", xy=(mid, h), xytext=(0,10), textcoords='offset points',
+                        ha='center', color='red', fontsize=9, fontweight='bold')
+            ax.axvspan(cote['start_km'], cote['end_km'], color='red', alpha=0.1)
+        
+        st.pyplot(fig)
         
         st.subheader("🏃 Plan d'entraînement 8 semaines")
         plan_df = generer_plan(analyse['distance_totale_km'], analyse['D_plus_m'])
