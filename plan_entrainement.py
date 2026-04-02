@@ -95,7 +95,7 @@ if uploaded_file is not None:
         # Ligne rouge
         ax.plot(df['cum_distance'], df['elevation'], color='red', linewidth=2)
 
-        # Fond gris clair partout
+        # Fond gris clair
         ax.set_facecolor('#d9d9d9')
         fig.patch.set_facecolor('#d9d9d9')
 
@@ -108,8 +108,8 @@ if uploaded_file is not None:
         # Quadrillage noir
         ax.grid(True, color='black', linestyle='--', linewidth=0.7)
 
-        # Forcer l'axe y à commencer à 0
-        ax.set_ylim(bottom=0)
+        # Axe x commence à 0
+        ax.set_xlim(left=0)
 
         # Marquer les côtes >1 km
         for cote in analyse['cotes']:
