@@ -3,6 +3,7 @@ import gpxpy
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MultipleLocator
 
 # --- Fonction d'analyse GPX ---
 def analyser_gpx(gpx_file):
@@ -37,14 +38,12 @@ def analyser_gpx(gpx_file):
             cote_distance += d
             cote_elevation += e
         else:
-            # ne conserver que les côtes >= 0.5 km
             if cote_distance >= 0.5:
                 pente = (cote_elevation / (cote_distance * 1000)) * 100
                 cotes.append({'start_km': cum_d - cote_distance, 'end_km': cum_d, 'pente_pct': round(pente,1)})
             cote_distance = 0
             cote_elevation = 0
 
-    # dernière côte si elle finit en montée
     if cote_distance >= 0.5:
         pente = (cote_elevation / (cote_distance * 1000)) * 100
         cotes.append({'start_km': cum_d - cote_distance, 'end_km': cum_d, 'pente_pct': round(pente,1)})
@@ -110,8 +109,9 @@ if uploaded_file is not None:
         # Quadrillage noir
         ax.grid(True, color='black', linestyle='--', linewidth=0.7)
 
-        # Axe x commence à 0
+        # Axe x commence à 0 et graduation tous les 1 km
         ax.set_xlim(left=0)
+        ax.xaxis.set_major_locator(MultipleLocator(1))
 
         # Marquer les côtes >= 0.5 km avec leur pourcentage
         for cote in analyse['cotes']:
