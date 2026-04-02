@@ -37,15 +37,15 @@ def analyser_gpx(gpx_file):
             cote_distance += d
             cote_elevation += e
         else:
-            # on ajoute toutes les côtes, même <1 km
-            if cote_distance > 0:
+            # ne conserver que les côtes >= 0.5 km
+            if cote_distance >= 0.5:
                 pente = (cote_elevation / (cote_distance * 1000)) * 100
                 cotes.append({'start_km': cum_d - cote_distance, 'end_km': cum_d, 'pente_pct': round(pente,1)})
             cote_distance = 0
             cote_elevation = 0
 
     # dernière côte si elle finit en montée
-    if cote_distance > 0:
+    if cote_distance >= 0.5:
         pente = (cote_elevation / (cote_distance * 1000)) * 100
         cotes.append({'start_km': cum_d - cote_distance, 'end_km': cum_d, 'pente_pct': round(pente,1)})
     
@@ -113,7 +113,7 @@ if uploaded_file is not None:
         # Axe x commence à 0
         ax.set_xlim(left=0)
 
-        # Marquer toutes les côtes avec leur pourcentage
+        # Marquer les côtes >= 0.5 km avec leur pourcentage
         for cote in analyse['cotes']:
             mid = (cote['start_km'] + cote['end_km']) / 2
             h = df.loc[(df['cum_distance']>=cote['start_km']) & (df['cum_distance']<=cote['end_km']), 'elevation'].max()
