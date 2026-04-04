@@ -137,12 +137,14 @@ if uploaded_file is not None:
         # --- Graphique profil d'altitude ---
         df = analyse['df']
         fig, ax = plt.subplots(figsize=(10,4))
+        y_min_data, y_max_data = df['elevation'].min(), df['elevation'].max()
         ax.plot(df['cum_distance'], df['elevation'], color='red', linewidth=2)
+        ax.fill_between(df['cum_distance'], df['elevation'], y_min_data, color='#cccccc', alpha=0.5)
         ax.set_facecolor('#f5f5f5')
         fig.patch.set_facecolor('#f5f5f5')
         ax.grid(True, color='black', linestyle='--', linewidth=0.7, alpha=0.3)
         ax.xaxis.set_major_locator(MultipleLocator(1))
-        ax.set_xlim(left=0)
+        ax.set_xlim(0, df['cum_distance'].iloc[-1])
         ax.set_xlabel("Distance (km)")
         ax.set_ylabel("Altitude (m)")
         ax.set_title("Profil d'altitude du parcours")
@@ -152,7 +154,6 @@ if uploaded_file is not None:
 
         # Annoter les côtes sans chevauchement (empilement vertical)
         min_gap_x = df['cum_distance'].iloc[-1] * 0.06
-        y_min_data, y_max_data = df['elevation'].min(), df['elevation'].max()
         data_range = y_max_data - y_min_data if y_max_data != y_min_data else 100
 
         # 1er passage : calculer les offsets
