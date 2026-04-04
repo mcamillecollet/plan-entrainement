@@ -188,7 +188,7 @@ if uploaded_file is not None:
 
         min_gap_x = df['cum_distance'].iloc[-1] * 0.06
         label_step = data_range * 0.13
-        label_base = data_range * 0.05
+        label_base = data_range * 0.03
         label_positions = []
         cote_labels = []
         for cote in analyse['cotes']:
@@ -229,10 +229,9 @@ if uploaded_file is not None:
         ax.spines['left'].set_visible(False)
 
         for cote, mid, h, y_label in cote_labels:
-            ax.plot([mid, mid], [h, y_label], color='#7B2D42', linewidth=0.8, alpha=0.6, zorder=4)
-            ax.plot(mid, h, 'o', color='#7B2D42', markersize=4, zorder=5)
             ax.text(mid, y_label, f"{cote['pente_pct']}%",
-                    ha='center', va='bottom', color='#7B2D42', fontsize=9, fontweight='bold', zorder=6)
+                    ha='center', va='bottom', color='#7B2D42', fontsize=9, fontweight='bold', zorder=6,
+                    bbox=dict(boxstyle='round,pad=0.15', facecolor='white', alpha=0.75, edgecolor='none'))
 
         st.pyplot(fig)
         
@@ -256,7 +255,7 @@ if uploaded_file is not None:
 
             min_gap_x_d = df['cum_distance'].iloc[-1] * 0.10
             label_step_d = data_range_d * 0.13
-            label_base_d = data_range_d * 0.05
+            label_base_d = data_range_d * 0.03
             label_positions_d = []
             desc_labels = []
             for desc in analyse['descentes']:
@@ -297,10 +296,9 @@ if uploaded_file is not None:
             ax3.spines['left'].set_visible(False)
 
             for desc, mid, h, y_label in desc_labels:
-                ax3.plot([mid, mid], [h, y_label], color='#4A90C4', linewidth=0.8, alpha=0.6, zorder=4)
-                ax3.plot(mid, h, 'o', color='#4A90C4', markersize=4, zorder=5)
                 ax3.text(mid, y_label, f"({desc['pente_pct']}) %",
-                         ha='center', va='bottom', color='#4A90C4', fontsize=9, fontweight='bold', zorder=6)
+                         ha='center', va='bottom', color='#4A90C4', fontsize=9, fontweight='bold', zorder=6,
+                         bbox=dict(boxstyle='round,pad=0.15', facecolor='white', alpha=0.75, edgecolor='none'))
 
             st.pyplot(fig3)
 
@@ -309,8 +307,9 @@ if uploaded_file is not None:
             desc_df = desc_df[['start_km','end_km','longueur_km','pente_pct']]
             desc_df = desc_df.round({'start_km':1,'end_km':1,'longueur_km':1})
             desc_df.rename(columns={'start_km':'Début (km)','end_km':'Fin (km)','longueur_km':'Longueur (km)','pente_pct':'% dénivelé'}, inplace=True)
-            desc_df['% dénivelé'] = desc_df['% dénivelé'].apply(lambda x: f"({x:.1f}) %")
-            st.dataframe(desc_df, use_container_width=True)
+            st.dataframe(desc_df, use_container_width=True, column_config={
+                '% dénivelé': st.column_config.NumberColumn(format="(%.1f) %%")
+            })
         
         # --- Paramètres pour le plan ---
         st.subheader("⚙️ Paramètres du plan d'entraînement")
