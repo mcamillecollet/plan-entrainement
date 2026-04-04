@@ -186,7 +186,7 @@ if uploaded_file is not None:
         y_min_data, y_max_data = df['elevation'].min(), df['elevation'].max()
         data_range = y_max_data - y_min_data if y_max_data != y_min_data else 100
 
-        min_gap_x = df['cum_distance'].iloc[-1] * 0.06
+        min_gap_x = df['cum_distance'].iloc[-1] * 0.10
         label_step = data_range * 0.13
         label_base = data_range * 0.03
         label_positions = []
@@ -230,8 +230,7 @@ if uploaded_file is not None:
 
         for cote, mid, h, y_label in cote_labels:
             ax.text(mid, y_label, f"{cote['pente_pct']}%",
-                    ha='center', va='bottom', color='#7B2D42', fontsize=9, fontweight='bold', zorder=6,
-                    bbox=dict(boxstyle='round,pad=0.15', facecolor='white', alpha=0.75, edgecolor='none'))
+                    ha='center', va='bottom', color='#7B2D42', fontsize=9, fontweight='bold', zorder=6)
 
         st.pyplot(fig)
         
@@ -297,8 +296,7 @@ if uploaded_file is not None:
 
             for desc, mid, h, y_label in desc_labels:
                 ax3.text(mid, y_label, f"({desc['pente_pct']}) %",
-                         ha='center', va='bottom', color='#4A90C4', fontsize=9, fontweight='bold', zorder=6,
-                         bbox=dict(boxstyle='round,pad=0.15', facecolor='white', alpha=0.75, edgecolor='none'))
+                         ha='center', va='bottom', color='#4A90C4', fontsize=9, fontweight='bold', zorder=6)
 
             st.pyplot(fig3)
 
