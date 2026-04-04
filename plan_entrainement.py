@@ -80,43 +80,70 @@ def analyser_gpx(gpx_file):
     return analyse
 
 # --- Fonction pour générer plan personnalisé ---
-def generer_plan_personnalise(distance_course, D_plus, duree_semaine, sorties_par_semaine):
+def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, duree_semaine, sorties_par_semaine, D_plus):
     plan = []
-    volume_base = distance_course / 5
-    coef_Dplus = 1 + (D_plus / 1000)
-    
+
+    # Répartition de base selon le niveau
+    if niveau == "Débutant":
+        easy_pct, seuil_pct, fraction_pct, long_pct = 0.45, 0.15, 0.10, 0.30
+    elif niveau == "Intermédiaire":
+        easy_pct, seuil_pct, fraction_pct, long_pct = 0.30, 0.25, 0.20, 0.25
+    else:  # Avancé
+        easy_pct, seuil_pct, fraction_pct, long_pct = 0.25, 0.25, 0.25, 0.25
+
+    # Ajustement selon le type de course
+    if type_course == "5km":
+        fraction_pct += 0.10; long_pct -= 0.10
+    elif type_course == "10km":
+        fraction_pct += 0.05; seuil_pct += 0.05; easy_pct -= 0.05; long_pct -= 0.05
+    elif type_course == "Semi-marathon":
+        seuil_pct += 0.05; easy_pct -= 0.05
+    elif type_course == "Marathon":
+        long_pct += 0.10; fraction_pct -= 0.10
+
+    # Ajustement D+
+    if D_plus > 500:
+        fraction_pct += 0.05; seuil_pct -= 0.05
+
+    # Ajustement selon le nombre de sorties disponibles
+    if sorties_par_semaine == 2:
+        easy_pct += seuil_pct + fraction_pct
+        seuil_pct, fraction_pct = 0, 0
+    elif sorties_par_semaine == 3:
+        seuil_pct += fraction_pct
+        fraction_pct = 0
+
+    # Normaliser pour que la somme = 1
+    total = easy_pct + seuil_pct + fraction_pct + long_pct
+    easy_pct /= total; seuil_pct /= total; fraction_pct /= total; long_pct /= total
+
+    # Calcul du nombre de semaines de décharge (tapering)
+    semaines_taper = 3 if duree_semaine >= 12 else 2
+    semaines_build = duree_semaine - semaines_taper
+
     for semaine in range(1, duree_semaine + 1):
-        if semaine >= duree_semaine - 1:
-            coef_progression = 0.7 + 0.15*(semaine - (duree_semaine - 2))
+        if semaine <= semaines_build:
+            # Progression linéaire du volume
+            progress = (semaine - 1) / max(semaines_build - 1, 1)
+            volume_total = volume_debut + (volume_pic - volume_debut) * progress
+            # Semaine de récupération toutes les 4 semaines
+            if semaine % 4 == 0 and semaine < semaines_build:
+                volume_total *= 0.75
         else:
-            coef_progression = 1 + 0.07*(semaine - 1)
-        
-        volume_total = volume_base * coef_Dplus * coef_progression
-        
-        easy_pct = 0.25
-        seuil_pct = 0.30
-        fraction_pct = 0.20
-        long_pct = 0.25
-        
-        if D_plus > 500:
-            fraction_pct += 0.1
-            seuil_pct -= 0.05
-            easy_pct -= 0.05
-        
-        easy_km = round(volume_total * easy_pct, 1)
-        seuil_km = round(volume_total * seuil_pct, 1)
-        fraction_km = round(volume_total * fraction_pct, 1)
-        long_km = round(volume_total * long_pct, 1)
-        
+            # Tapering progressif
+            taper_step = semaine - semaines_build
+            coef = 0.70 - 0.15 * (taper_step - 1)
+            volume_total = volume_pic * max(coef, 0.30)
+
         plan.append({
             'Semaine': semaine,
-            'Easy Run (km)': easy_km,
-            'Seuil / Tempo (km)': seuil_km,
-            'Fractionné / Côtes (km)': fraction_km,
-            'Long Run (km)': long_km,
+            'Easy Run (km)': round(volume_total * easy_pct, 1),
+            'Seuil / Tempo (km)': round(volume_total * seuil_pct, 1),
+            'Fractionné / Côtes (km)': round(volume_total * fraction_pct, 1),
+            'Long Run (km)': round(volume_total * long_pct, 1),
             'Volume total (km)': round(volume_total, 1)
         })
-    
+
     return pd.DataFrame(plan)
 
 # --- Streamlit UI ---
@@ -220,7 +247,7 @@ if uploaded_file is not None:
         date_course = st.date_input("Date de la course", value=None, format="DD/MM/YYYY")
         
         if st.button("Générer le plan d'entraînement"):
-            plan_df = generer_plan_personnalise(analyse['distance_totale_km'], analyse['D_plus_m'], duree_semaine, sorties_par_semaine)
+            plan_df = generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, duree_semaine, sorties_par_semaine, analyse['D_plus_m'])
             
             st.subheader("📋 Plan d'entraînement personnalisé")
             st.dataframe(plan_df, use_container_width=True)
