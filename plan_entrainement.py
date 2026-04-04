@@ -138,25 +138,10 @@ if uploaded_file is not None:
         df = analyse['df']
         fig, ax = plt.subplots(figsize=(10,4))
         y_min_data, y_max_data = df['elevation'].min(), df['elevation'].max()
-        ax.plot(df['cum_distance'], df['elevation'], color='red', linewidth=2)
-        ax.fill_between(df['cum_distance'], df['elevation'], y_min_data, color='#cccccc', alpha=0.5)
-        ax.set_facecolor('#f5f5f5')
-        fig.patch.set_facecolor('#f5f5f5')
-        ax.grid(True, color='black', linestyle='--', linewidth=0.7, alpha=0.3)
-        ax.xaxis.set_major_locator(MultipleLocator(1))
-        ax.set_xlim(0, df['cum_distance'].iloc[-1])
-        ax.set_xlabel("Distance (km)")
-        ax.set_ylabel("Altitude (m)")
-        ax.set_title("Profil d'altitude du parcours")
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        ax.spines['left'].set_visible(False)
-
-        # Annoter les côtes sans chevauchement (empilement vertical)
-        min_gap_x = df['cum_distance'].iloc[-1] * 0.06
         data_range = y_max_data - y_min_data if y_max_data != y_min_data else 100
 
-        # 1er passage : calculer les offsets
+        # 1er passage : calculer les offsets labels
+        min_gap_x = df['cum_distance'].iloc[-1] * 0.06
         label_positions = []
         cote_labels = []
         for cote in analyse['cotes']:
@@ -169,13 +154,40 @@ if uploaded_file is not None:
             label_positions.append((mid, y_offset))
             cote_labels.append((cote, mid, h, y_offset))
 
-        # Ajuster ylim pour que les labels restent dans le graphique
+        # Fixer ylim avant de dessiner pour connaître y_top
         max_offset = max((off for _, off in label_positions), default=10)
         fig_height_pts = fig.get_size_inches()[1] * fig.dpi
         top_padding = (max_offset / fig_height_pts) * data_range * 1.8
-        ax.set_ylim(y_min_data - data_range * 0.05, y_max_data + top_padding + data_range * 0.08)
+        y_top = y_max_data + top_padding + data_range * 0.08
+        ax.set_ylim(y_min_data - data_range * 0.05, y_top)
 
-        # 2ème passage : dessiner
+        # Gris sous la courbe jusqu'à l'axe des abscisses
+        ax.fill_between(df['cum_distance'], df['elevation'], y_min_data, color='#cccccc', alpha=0.5)
+
+        # Bandes rouges au-dessus de la courbe pour chaque côte
+        for cote, mid, h, y_offset in cote_labels:
+            mask = (df['cum_distance'] >= cote['start_km']) & (df['cum_distance'] <= cote['end_km'])
+            df_section = df[mask]
+            if not df_section.empty:
+                ax.fill_between(df_section['cum_distance'], df_section['elevation'],
+                                y_top, color='red', alpha=0.1)
+
+        # Tracé de la courbe par-dessus
+        ax.plot(df['cum_distance'], df['elevation'], color='red', linewidth=2)
+
+        ax.set_facecolor('#f5f5f5')
+        fig.patch.set_facecolor('#f5f5f5')
+        ax.grid(True, color='black', linestyle='--', linewidth=0.7, alpha=0.3)
+        ax.xaxis.set_major_locator(MultipleLocator(1))
+        ax.set_xlim(0, df['cum_distance'].iloc[-1])
+        ax.set_xlabel("Distance (km)")
+        ax.set_ylabel("Altitude (m)")
+        ax.set_title("Profil d'altitude du parcours")
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['left'].set_visible(False)
+
+        # 2ème passage : annotations
         for cote, mid, h, y_offset in cote_labels:
             ax.annotate(f"{cote['pente_pct']}%", xy=(mid, h),
                         xytext=(0, y_offset), textcoords='offset points',
