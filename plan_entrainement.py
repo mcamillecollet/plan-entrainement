@@ -165,16 +165,16 @@ if uploaded_file is not None:
         # Gris sous la courbe jusqu'au bas du graphique
         ax.fill_between(df['cum_distance'], df['elevation'], y_bottom, color='#cccccc', alpha=0.5)
 
-        # Bandes rouges au-dessus de la courbe pour chaque côte
+        # Bandes bordeaux au-dessus de la courbe pour chaque côte
         for cote, mid, h, y_offset in cote_labels:
             mask = (df['cum_distance'] >= cote['start_km']) & (df['cum_distance'] <= cote['end_km'])
             df_section = df[mask]
             if not df_section.empty:
                 ax.fill_between(df_section['cum_distance'], df_section['elevation'],
-                                y_top, color='red', alpha=0.1)
+                                y_top, color='#7B2D42', alpha=0.1)
 
         # Tracé de la courbe par-dessus
-        ax.plot(df['cum_distance'], df['elevation'], color='red', linewidth=2)
+        ax.plot(df['cum_distance'], df['elevation'], color='#7B2D42', linewidth=2)
 
         ax.set_facecolor('#f5f5f5')
         fig.patch.set_facecolor('#f5f5f5')
@@ -192,7 +192,7 @@ if uploaded_file is not None:
         for cote, mid, h, y_offset in cote_labels:
             ax.annotate(f"{cote['pente_pct']}%", xy=(mid, h),
                         xytext=(0, y_offset), textcoords='offset points',
-                        ha='center', color='red', fontsize=9, fontweight='bold')
+                        ha='center', color='#7B2D42', fontsize=9, fontweight='bold')
 
         st.pyplot(fig)
         
@@ -227,7 +227,7 @@ if uploaded_file is not None:
             
             # --- Graphique volume hebdo ---
             fig2, ax2 = plt.subplots(figsize=(10,4))
-            ax2.plot(plan_df['Semaine'], plan_df['Volume total (km)'], color='#ff4b4b', linewidth=3, marker='o')
+            ax2.plot(plan_df['Semaine'], plan_df['Volume total (km)'], color='#7B2D42', linewidth=3, marker='o')
             ax2.set_facecolor('#f5f5f5')
             fig2.patch.set_facecolor('#f5f5f5')
             ax2.set_title("Évolution du volume hebdomadaire", fontsize=14, weight='bold')
