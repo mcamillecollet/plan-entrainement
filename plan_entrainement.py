@@ -37,7 +37,7 @@ def analyser_gpx(gpx_file):
     
     D_plus = df.loc[df['elevation_diff'] > 0, 'elevation_diff'].sum()
     
-    # Identifier les côtes >0.2 km
+    # Identifier les côtes >0.1 km
     cotes = []
     cote_distance = 0
     cote_elevation = 0
@@ -47,7 +47,7 @@ def analyser_gpx(gpx_file):
             cote_distance += d
             cote_elevation += e
         else:
-            if cote_distance >= 0.2:
+            if cote_distance >= 0.1:
                 pente = (cote_elevation / (cote_distance * 1000)) * 100
                 cote_distance_start = cum_d - cote_distance
                 cotes.append({
@@ -58,7 +58,7 @@ def analyser_gpx(gpx_file):
                 })
             cote_distance = 0
             cote_elevation = 0
-    if cote_distance >= 0.2:
+    if cote_distance >= 0.1:
         pente = (cote_elevation / (cote_distance * 1000)) * 100
         cote_distance_start = cum_d - cote_distance
         cotes.append({
@@ -185,7 +185,7 @@ if uploaded_file is not None:
         
         # --- Tableau des côtes ---
         if analyse['cotes']:
-            st.subheader("🗻 Tableau des côtes (>200m)")
+            st.subheader("🗻 Tableau des côtes (>100m)")
             cotes_df = pd.DataFrame(analyse['cotes'])
             cotes_df = cotes_df[['start_km','end_km','longueur_km','pente_pct']]
             cotes_df = cotes_df.round({'start_km':1,'end_km':1,'longueur_km':1})
