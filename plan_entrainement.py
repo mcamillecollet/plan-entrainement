@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
+import datetime
 
 # --- Fonction d'analyse GPX ---
 def analyser_gpx(gpx_file):
@@ -166,9 +167,15 @@ if uploaded_file is not None:
         
         # --- Paramètres pour le plan ---
         st.subheader("⚙️ Paramètres du plan d'entraînement")
-        objectif_temps = st.text_input("Durée cible du semi (ex: 1h50)", value="1h50")
-        duree_semaine = st.selectbox("Durée du plan (semaines)", list(range(4,21)), index=4)
-        sorties_par_semaine = st.selectbox("Nombre de sorties par semaine", [2,3,4], index=1)
+        niveau = st.radio("Niveau", ["Débutant", "Intermédiaire", "Avancé"], horizontal=True)
+        type_course = st.selectbox("Type de course", ["5km", "10km", "Semi-marathon", "Marathon"])
+        chrono_actuel = st.text_input("Chrono actuel (ex: 1h45)")
+        chrono_cible = st.text_input("Chrono cible (ex: 1h30)")
+        duree_semaine = st.selectbox("Durée du plan (semaines)", list(range(4, 21)), index=4)
+        sorties_par_semaine = st.selectbox("Nombre de sorties par semaine", [2, 3, 4], index=1)
+        volume_debut = st.selectbox("Volume hebdomadaire pour commencer (km)", list(range(5, 21)), index=5)
+        volume_pic = st.selectbox("Volume hebdomadaire pic de préparation (km)", list(range(15, 105, 5)), index=5)
+        date_course = st.date_input("Date de la course", value=None, format="DD/MM/YYYY")
         
         if st.button("Générer le plan d'entraînement"):
             plan_df = generer_plan_personnalise(analyse['distance_totale_km'], analyse['D_plus_m'], duree_semaine, sorties_par_semaine)
