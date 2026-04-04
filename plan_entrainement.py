@@ -119,7 +119,7 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
         easy_pct, seuil_pct, fraction_pct, long_pct = 0.45, 0.15, 0.10, 0.30
     elif niveau == "Intermédiaire":
         easy_pct, seuil_pct, fraction_pct, long_pct = 0.30, 0.25, 0.20, 0.25
-    else:  # Avancé
+    else:
         easy_pct, seuil_pct, fraction_pct, long_pct = 0.25, 0.25, 0.25, 0.25
 
     if type_course == "5km":
@@ -190,34 +190,31 @@ if uploaded_file is not None:
         y_min_data, y_max_data = df['elevation'].min(), df['elevation'].max()
         data_range = y_max_data - y_min_data if y_max_data != y_min_data else 100
 
-        # 1er passage : calculer les offsets labels
+        # Positions y des labels en coordonnées données
         min_gap_x = df['cum_distance'].iloc[-1] * 0.06
+        label_step = data_range * 0.13
+        label_base = data_range * 0.05
         label_positions = []
         cote_labels = []
         for cote in analyse['cotes']:
             mid = (cote['start_km'] + cote['end_km']) / 2
             h = df.loc[(df['cum_distance']>=cote['start_km']) & (df['cum_distance']<=cote['end_km']), 'elevation'].max()
-            y_offset = 10
-            for prev_x, prev_offset in label_positions:
+            y_label = h + label_base
+            for prev_x, prev_y in label_positions:
                 if abs(mid - prev_x) < min_gap_x:
-                    y_offset = max(y_offset, prev_offset + 16)
-            label_positions.append((mid, y_offset))
-            cote_labels.append((cote, mid, h, y_offset))
+                    y_label = max(y_label, prev_y + label_step)
+            label_positions.append((mid, y_label))
+            cote_labels.append((cote, mid, h, y_label))
 
-        # Fixer ylim en tenant compte de la hauteur réelle des axes (~65% de la figure)
-        max_offset = max((off for _, off in label_positions), default=10)
-        fig_height_pts = fig.get_size_inches()[1] * fig.dpi
-        axes_height_pts = fig_height_pts * 0.65
-        top_padding = ((max_offset + 12) / axes_height_pts) * data_range
-        y_top = y_max_data + top_padding + data_range * 0.08
+        # ylim garanti pour contenir tous les labels
+        max_y_label = max((y for _, y in label_positions), default=y_max_data)
+        y_top = max_y_label + data_range * 0.06
         y_bottom = y_min_data - data_range * 0.05
         ax.set_ylim(y_bottom, y_top)
 
-        # Gris sous la courbe
         ax.fill_between(df['cum_distance'], df['elevation'], y_bottom, color='#cccccc', alpha=0.5)
 
-        # Bandes bordeaux au-dessus de la courbe pour chaque côte
-        for cote, mid, h, y_offset in cote_labels:
+        for cote, mid, h, y_label in cote_labels:
             mask = (df['cum_distance'] >= cote['start_km']) & (df['cum_distance'] <= cote['end_km'])
             df_section = df[mask]
             if not df_section.empty:
@@ -237,11 +234,9 @@ if uploaded_file is not None:
         ax.spines['right'].set_visible(False)
         ax.spines['left'].set_visible(False)
 
-        # 2ème passage : annotations
-        for cote, mid, h, y_offset in cote_labels:
-            ax.annotate(f"{cote['pente_pct']}%", xy=(mid, h),
-                        xytext=(0, y_offset), textcoords='offset points',
-                        ha='center', color='#7B2D42', fontsize=9, fontweight='bold')
+        for cote, mid, h, y_label in cote_labels:
+            ax.text(mid, y_label, f"{cote['pente_pct']}%",
+                    ha='center', va='bottom', color='#7B2D42', fontsize=9, fontweight='bold')
 
         st.pyplot(fig)
         
@@ -264,29 +259,28 @@ if uploaded_file is not None:
             data_range_d = y_max_d - y_min_d if y_max_d != y_min_d else 100
 
             min_gap_x_d = df['cum_distance'].iloc[-1] * 0.10
+            label_step_d = data_range_d * 0.13
+            label_base_d = data_range_d * 0.05
             label_positions_d = []
             desc_labels = []
             for desc in analyse['descentes']:
                 mid = (desc['start_km'] + desc['end_km']) / 2
                 h = df.loc[(df['cum_distance']>=desc['start_km']) & (df['cum_distance']<=desc['end_km']), 'elevation'].max()
-                y_offset = 10
-                for prev_x, prev_offset in label_positions_d:
+                y_label = h + label_base_d
+                for prev_x, prev_y in label_positions_d:
                     if abs(mid - prev_x) < min_gap_x_d:
-                        y_offset = max(y_offset, prev_offset + 20)
-                label_positions_d.append((mid, y_offset))
-                desc_labels.append((desc, mid, h, y_offset))
+                        y_label = max(y_label, prev_y + label_step_d)
+                label_positions_d.append((mid, y_label))
+                desc_labels.append((desc, mid, h, y_label))
 
-            max_offset_d = max((off for _, off in label_positions_d), default=10)
-            fig_height_pts_d = fig3.get_size_inches()[1] * fig3.dpi
-            axes_height_pts_d = fig_height_pts_d * 0.65
-            top_padding_d = ((max_offset_d + 12) / axes_height_pts_d) * data_range_d
-            y_top_d = y_max_d + top_padding_d + data_range_d * 0.08
+            max_y_label_d = max((y for _, y in label_positions_d), default=y_max_d)
+            y_top_d = max_y_label_d + data_range_d * 0.06
             y_bottom_d = y_min_d - data_range_d * 0.05
             ax3.set_ylim(y_bottom_d, y_top_d)
 
             ax3.fill_between(df['cum_distance'], df['elevation'], y_bottom_d, color='#cccccc', alpha=0.5)
 
-            for desc, mid, h, y_offset in desc_labels:
+            for desc, mid, h, y_label in desc_labels:
                 mask = (df['cum_distance'] >= desc['start_km']) & (df['cum_distance'] <= desc['end_km'])
                 df_section = df[mask]
                 if not df_section.empty:
@@ -306,10 +300,9 @@ if uploaded_file is not None:
             ax3.spines['right'].set_visible(False)
             ax3.spines['left'].set_visible(False)
 
-            for desc, mid, h, y_offset in desc_labels:
-                ax3.annotate(f"({desc['pente_pct']})%", xy=(mid, h),
-                             xytext=(0, y_offset), textcoords='offset points',
-                             ha='center', color='#4A90C4', fontsize=9, fontweight='bold')
+            for desc, mid, h, y_label in desc_labels:
+                ax3.text(mid, y_label, f"({desc['pente_pct']})%",
+                         ha='center', va='bottom', color='#4A90C4', fontsize=9, fontweight='bold')
 
             st.pyplot(fig3)
 
