@@ -23,7 +23,14 @@ def analyser_gpx(gpx_file):
     if df.empty:
         return None
     
-    df['distance'] = np.sqrt((df['latitude'].diff()**2) + (df['longitude'].diff()**2)).fillna(0) * 111
+    distances = [0.0]
+    for i in range(1, len(df)):
+        d = gpxpy.geo.haversine_distance(
+            df['latitude'].iloc[i-1], df['longitude'].iloc[i-1],
+            df['latitude'].iloc[i], df['longitude'].iloc[i]
+        ) / 1000  # mètres → km
+        distances.append(d)
+    df['distance'] = distances
     df['cum_distance'] = df['distance'].cumsum()
     df['elevation_diff'] = df['elevation'].diff().fillna(0)
     
@@ -33,6 +40,7 @@ def analyser_gpx(gpx_file):
     cotes = []
     cote_distance = 0
     cote_elevation = 0
+    cum_d = 0
     for d, e, cum_d in zip(df['distance'], df['elevation_diff'], df['cum_distance']):
         if e > 0:
             cote_distance += d
