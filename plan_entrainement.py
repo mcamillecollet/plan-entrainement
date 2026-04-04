@@ -159,10 +159,10 @@ if uploaded_file is not None:
         fig_height_pts = fig.get_size_inches()[1] * fig.dpi
         top_padding = (max_offset / fig_height_pts) * data_range * 1.8
         y_top = y_max_data + top_padding + data_range * 0.08
-        ax.set_ylim(y_min_data - data_range * 0.05, y_top)
+        ax.set_ylim(0, y_top)
 
-        # Gris sous la courbe jusqu'à l'axe des abscisses
-        ax.fill_between(df['cum_distance'], df['elevation'], y_min_data, color='#cccccc', alpha=0.5)
+        # Gris sous la courbe jusqu'à 0 sur l'axe des ordonnées
+        ax.fill_between(df['cum_distance'], df['elevation'], 0, color='#cccccc', alpha=0.5)
 
         # Bandes rouges au-dessus de la courbe pour chaque côte
         for cote, mid, h, y_offset in cote_labels:
