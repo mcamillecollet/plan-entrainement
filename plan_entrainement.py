@@ -29,7 +29,7 @@ def analyser_gpx(gpx_file):
         d = gpxpy.geo.haversine_distance(
             df['latitude'].iloc[i-1], df['longitude'].iloc[i-1],
             df['latitude'].iloc[i], df['longitude'].iloc[i]
-        ) / 1000  # mètres → km
+        ) / 1000
         distances.append(d)
     df['distance'] = distances
     df['cum_distance'] = df['distance'].cumsum()
@@ -37,7 +37,6 @@ def analyser_gpx(gpx_file):
     
     D_plus = df.loc[df['elevation_diff'] > 0, 'elevation_diff'].sum()
     
-    # Identifier les côtes >0.2 km
     cotes = []
     cote_distance = 0
     cote_elevation = 0
@@ -68,7 +67,6 @@ def analyser_gpx(gpx_file):
             'pente_pct': round(pente,1)
         })
 
-    # Identifier les descentes >0.2 km
     descentes = []
     desc_distance = 0
     desc_elevation = 0
@@ -99,7 +97,7 @@ def analyser_gpx(gpx_file):
             'pente_pct': round(pente,1)
         })
     
-    analyse = {
+    return {
         'distance_totale_km': df['cum_distance'].iloc[-1],
         'altitude_min_m': df['elevation'].min(),
         'altitude_max_m': df['elevation'].max(),
@@ -108,8 +106,6 @@ def analyser_gpx(gpx_file):
         'cotes': cotes,
         'descentes': descentes
     }
-    
-    return analyse
 
 # --- Fonction pour générer plan personnalisé ---
 def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, duree_semaine, sorties_par_semaine, D_plus):
@@ -184,13 +180,12 @@ if uploaded_file is not None:
         st.write(f"Altitude max : {analyse['altitude_max_m']:.0f} m")
         st.write(f"D+ total : {analyse['D_plus_m']:.0f} m")
         
-        # --- Graphique profil d'altitude ---
+        # --- Graphique profil d'altitude (côtes) ---
         df = analyse['df']
         fig, ax = plt.subplots(figsize=(10,4))
         y_min_data, y_max_data = df['elevation'].min(), df['elevation'].max()
         data_range = y_max_data - y_min_data if y_max_data != y_min_data else 100
 
-        # Positions y des labels en coordonnées données
         min_gap_x = df['cum_distance'].iloc[-1] * 0.06
         label_step = data_range * 0.13
         label_base = data_range * 0.05
@@ -206,7 +201,6 @@ if uploaded_file is not None:
             label_positions.append((mid, y_label))
             cote_labels.append((cote, mid, h, y_label))
 
-        # ylim garanti pour contenir tous les labels
         max_y_label = max((y for _, y in label_positions), default=y_max_data)
         y_top = max_y_label + data_range * 0.06
         y_bottom = y_min_data - data_range * 0.05
@@ -235,8 +229,10 @@ if uploaded_file is not None:
         ax.spines['left'].set_visible(False)
 
         for cote, mid, h, y_label in cote_labels:
+            ax.plot([mid, mid], [h, y_label], color='#7B2D42', linewidth=0.8, alpha=0.6, zorder=4)
+            ax.plot(mid, h, 'o', color='#7B2D42', markersize=4, zorder=5)
             ax.text(mid, y_label, f"{cote['pente_pct']}%",
-                    ha='center', va='bottom', color='#7B2D42', fontsize=9, fontweight='bold')
+                    ha='center', va='bottom', color='#7B2D42', fontsize=9, fontweight='bold', zorder=6)
 
         st.pyplot(fig)
         
@@ -301,8 +297,10 @@ if uploaded_file is not None:
             ax3.spines['left'].set_visible(False)
 
             for desc, mid, h, y_label in desc_labels:
-                ax3.text(mid, y_label, f"({desc['pente_pct']})%",
-                         ha='center', va='bottom', color='#4A90C4', fontsize=9, fontweight='bold')
+                ax3.plot([mid, mid], [h, y_label], color='#4A90C4', linewidth=0.8, alpha=0.6, zorder=4)
+                ax3.plot(mid, h, 'o', color='#4A90C4', markersize=4, zorder=5)
+                ax3.text(mid, y_label, f"({desc['pente_pct']}) %",
+                         ha='center', va='bottom', color='#4A90C4', fontsize=9, fontweight='bold', zorder=6)
 
             st.pyplot(fig3)
 
@@ -311,9 +309,8 @@ if uploaded_file is not None:
             desc_df = desc_df[['start_km','end_km','longueur_km','pente_pct']]
             desc_df = desc_df.round({'start_km':1,'end_km':1,'longueur_km':1})
             desc_df.rename(columns={'start_km':'Début (km)','end_km':'Fin (km)','longueur_km':'Longueur (km)','pente_pct':'% dénivelé'}, inplace=True)
-            st.dataframe(desc_df, use_container_width=True, column_config={
-                '% dénivelé': st.column_config.NumberColumn(format="%.1f %%")
-            })
+            desc_df['% dénivelé'] = desc_df['% dénivelé'].apply(lambda x: f"({x:.1f}) %")
+            st.dataframe(desc_df, use_container_width=True)
         
         # --- Paramètres pour le plan ---
         st.subheader("⚙️ Paramètres du plan d'entraînement")
@@ -333,7 +330,6 @@ if uploaded_file is not None:
             st.subheader("📋 Plan d'entraînement personnalisé")
             st.dataframe(plan_df, use_container_width=True)
             
-            # --- Graphique volume hebdo ---
             fig2, ax2 = plt.subplots(figsize=(10,4))
             ax2.plot(plan_df['Semaine'], plan_df['Volume total (km)'], color='#7B2D42', linewidth=3, marker='o')
             ax2.set_facecolor('#f5f5f5')
