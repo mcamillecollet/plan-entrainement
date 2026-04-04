@@ -262,7 +262,7 @@ if uploaded_file is not None:
             desc_labels = []
             for desc in analyse['descentes']:
                 mid = (desc['start_km'] + desc['end_km']) / 2
-                h = df.loc[(df['cum_distance']>=desc['start_km']) & (df['cum_distance']<=desc['end_km']), 'elevation'].min()
+                h = df.loc[(df['cum_distance']>=desc['start_km']) & (df['cum_distance']<=desc['end_km']), 'elevation'].max()
                 y_offset = 10
                 for prev_x, prev_offset in label_positions_d:
                     if abs(mid - prev_x) < min_gap_x_d:
@@ -300,7 +300,7 @@ if uploaded_file is not None:
             ax3.spines['left'].set_visible(False)
 
             for desc, mid, h, y_offset in desc_labels:
-                ax3.annotate(f"{desc['pente_pct']}%", xy=(mid, h),
+                ax3.annotate(f"-{desc['pente_pct']}%", xy=(mid, h),
                              xytext=(0, y_offset), textcoords='offset points',
                              ha='center', color='#4A90C4', fontsize=9, fontweight='bold')
 
