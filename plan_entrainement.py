@@ -142,17 +142,35 @@ if uploaded_file is not None:
         fig.patch.set_facecolor('#f5f5f5')
         ax.grid(True, color='black', linestyle='--', linewidth=0.7, alpha=0.3)
         ax.xaxis.set_major_locator(MultipleLocator(1))
+        ax.set_xlim(left=0)
         ax.set_xlabel("Distance (km)")
         ax.set_ylabel("Altitude (m)")
         ax.set_title("Profil d'altitude du parcours")
-        
-        for i, cote in enumerate(analyse['cotes'], 1):
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['left'].set_visible(False)
+
+        # Annoter les côtes sans chevauchement
+        label_positions = []
+        y_min, y_max = df['elevation'].min(), df['elevation'].max()
+        y_range = y_max - y_min if y_max != y_min else 1
+        min_gap_x = (df['cum_distance'].iloc[-1]) * 0.05
+
+        for cote in analyse['cotes']:
             mid = (cote['start_km'] + cote['end_km']) / 2
             h = df.loc[(df['cum_distance']>=cote['start_km']) & (df['cum_distance']<=cote['end_km']), 'elevation'].max()
-            ax.annotate(f"{cote['pente_pct']} %", xy=(mid, h), xytext=(0,10), textcoords='offset points',
-                        ha='center', color='red', fontsize=9, fontweight='bold')
             ax.axvspan(cote['start_km'], cote['end_km'], color='red', alpha=0.1)
-        
+
+            x_label = mid
+            for prev_x, prev_y in label_positions:
+                if abs(x_label - prev_x) < min_gap_x:
+                    x_label = prev_x + min_gap_x
+
+            ax.annotate(f"{cote['pente_pct']} %", xy=(mid, h),
+                        xytext=(x_label - mid, 10), textcoords='offset points',
+                        ha='center', color='red', fontsize=9, fontweight='bold')
+            label_positions.append((x_label, h))
+
         st.pyplot(fig)
         
         # --- Tableau des côtes ---
