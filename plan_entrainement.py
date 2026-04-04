@@ -177,7 +177,6 @@ if uploaded_file is not None:
 
         # 2ème passage : dessiner
         for cote, mid, h, y_offset in cote_labels:
-            ax.axvspan(cote['start_km'], cote['end_km'], color='red', alpha=0.1)
             ax.annotate(f"{cote['pente_pct']}%", xy=(mid, h),
                         xytext=(0, y_offset), textcoords='offset points',
                         ha='center', color='red', fontsize=9, fontweight='bold')
