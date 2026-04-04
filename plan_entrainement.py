@@ -151,23 +151,35 @@ if uploaded_file is not None:
         ax.spines['left'].set_visible(False)
 
         # Annoter les côtes sans chevauchement (empilement vertical)
-        label_positions = []
         min_gap_x = df['cum_distance'].iloc[-1] * 0.06
+        y_min_data, y_max_data = df['elevation'].min(), df['elevation'].max()
+        data_range = y_max_data - y_min_data if y_max_data != y_min_data else 100
 
+        # 1er passage : calculer les offsets
+        label_positions = []
+        cote_labels = []
         for cote in analyse['cotes']:
             mid = (cote['start_km'] + cote['end_km']) / 2
             h = df.loc[(df['cum_distance']>=cote['start_km']) & (df['cum_distance']<=cote['end_km']), 'elevation'].max()
-            ax.axvspan(cote['start_km'], cote['end_km'], color='red', alpha=0.1)
-
             y_offset = 10
             for prev_x, prev_offset in label_positions:
                 if abs(mid - prev_x) < min_gap_x:
                     y_offset = max(y_offset, prev_offset + 16)
+            label_positions.append((mid, y_offset))
+            cote_labels.append((cote, mid, h, y_offset))
 
+        # Ajuster ylim pour que les labels restent dans le graphique
+        max_offset = max((off for _, off in label_positions), default=10)
+        fig_height_pts = fig.get_size_inches()[1] * fig.dpi
+        top_padding = (max_offset / fig_height_pts) * data_range * 1.8
+        ax.set_ylim(y_min_data - data_range * 0.05, y_max_data + top_padding + data_range * 0.08)
+
+        # 2ème passage : dessiner
+        for cote, mid, h, y_offset in cote_labels:
+            ax.axvspan(cote['start_km'], cote['end_km'], color='red', alpha=0.1)
             ax.annotate(f"{cote['pente_pct']} %", xy=(mid, h),
                         xytext=(0, y_offset), textcoords='offset points',
                         ha='center', color='red', fontsize=9, fontweight='bold')
-            label_positions.append((mid, y_offset))
 
         st.pyplot(fig)
         
