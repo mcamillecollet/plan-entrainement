@@ -115,7 +115,6 @@ def analyser_gpx(gpx_file):
 def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, duree_semaine, sorties_par_semaine, D_plus):
     plan = []
 
-    # Répartition de base selon le niveau
     if niveau == "Débutant":
         easy_pct, seuil_pct, fraction_pct, long_pct = 0.45, 0.15, 0.10, 0.30
     elif niveau == "Intermédiaire":
@@ -123,7 +122,6 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
     else:  # Avancé
         easy_pct, seuil_pct, fraction_pct, long_pct = 0.25, 0.25, 0.25, 0.25
 
-    # Ajustement selon le type de course
     if type_course == "5km":
         fraction_pct += 0.10; long_pct -= 0.10
     elif type_course == "10km":
@@ -133,11 +131,9 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
     elif type_course == "Marathon":
         long_pct += 0.10; fraction_pct -= 0.10
 
-    # Ajustement D+
     if D_plus > 500:
         fraction_pct += 0.05; seuil_pct -= 0.05
 
-    # Ajustement selon le nombre de sorties disponibles
     if sorties_par_semaine == 2:
         easy_pct += seuil_pct + fraction_pct
         seuil_pct, fraction_pct = 0, 0
@@ -145,24 +141,19 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
         seuil_pct += fraction_pct
         fraction_pct = 0
 
-    # Normaliser pour que la somme = 1
     total = easy_pct + seuil_pct + fraction_pct + long_pct
     easy_pct /= total; seuil_pct /= total; fraction_pct /= total; long_pct /= total
 
-    # Calcul du nombre de semaines de décharge (tapering)
     semaines_taper = 3 if duree_semaine >= 12 else 2
     semaines_build = duree_semaine - semaines_taper
 
     for semaine in range(1, duree_semaine + 1):
         if semaine <= semaines_build:
-            # Progression linéaire du volume
             progress = (semaine - 1) / max(semaines_build - 1, 1)
             volume_total = volume_debut + (volume_pic - volume_debut) * progress
-            # Semaine de récupération toutes les 4 semaines
             if semaine % 4 == 0 and semaine < semaines_build:
                 volume_total *= 0.75
         else:
-            # Tapering progressif
             taper_step = semaine - semaines_build
             coef = 0.70 - 0.15 * (taper_step - 1)
             volume_total = volume_pic * max(coef, 0.30)
@@ -213,15 +204,16 @@ if uploaded_file is not None:
             label_positions.append((mid, y_offset))
             cote_labels.append((cote, mid, h, y_offset))
 
-        # Fixer ylim avant de dessiner pour connaître y_top
+        # Fixer ylim en tenant compte de la hauteur réelle des axes (~65% de la figure)
         max_offset = max((off for _, off in label_positions), default=10)
         fig_height_pts = fig.get_size_inches()[1] * fig.dpi
-        top_padding = (max_offset / fig_height_pts) * data_range * 1.8
+        axes_height_pts = fig_height_pts * 0.65
+        top_padding = ((max_offset + 12) / axes_height_pts) * data_range
         y_top = y_max_data + top_padding + data_range * 0.08
         y_bottom = y_min_data - data_range * 0.05
         ax.set_ylim(y_bottom, y_top)
 
-        # Gris sous la courbe jusqu'au bas du graphique
+        # Gris sous la courbe
         ax.fill_between(df['cum_distance'], df['elevation'], y_bottom, color='#cccccc', alpha=0.5)
 
         # Bandes bordeaux au-dessus de la courbe pour chaque côte
@@ -232,9 +224,7 @@ if uploaded_file is not None:
                 ax.fill_between(df_section['cum_distance'], df_section['elevation'],
                                 y_top, color='#7B2D42', alpha=0.1)
 
-        # Tracé de la courbe par-dessus
         ax.plot(df['cum_distance'], df['elevation'], color='#7B2D42', linewidth=2)
-
         ax.set_facecolor('#f5f5f5')
         fig.patch.set_facecolor('#f5f5f5')
         ax.grid(True, color='black', linestyle='--', linewidth=0.7, alpha=0.3)
@@ -263,7 +253,7 @@ if uploaded_file is not None:
             cotes_df = cotes_df.round({'start_km':1,'end_km':1,'longueur_km':1})
             cotes_df.rename(columns={'start_km':'Début (km)','end_km':'Fin (km)','longueur_km':'Longueur (km)','pente_pct':'% dénivelé'}, inplace=True)
             st.dataframe(cotes_df, use_container_width=True, column_config={
-                '% dénivelé': st.column_config.NumberColumn(format="%.1f%%")
+                '% dénivelé': st.column_config.NumberColumn(format="%.1f %%")
             })
 
         # --- Graphique descentes ---
@@ -288,7 +278,8 @@ if uploaded_file is not None:
 
             max_offset_d = max((off for _, off in label_positions_d), default=10)
             fig_height_pts_d = fig3.get_size_inches()[1] * fig3.dpi
-            top_padding_d = (max_offset_d / fig_height_pts_d) * data_range_d * 1.8
+            axes_height_pts_d = fig_height_pts_d * 0.65
+            top_padding_d = ((max_offset_d + 12) / axes_height_pts_d) * data_range_d
             y_top_d = y_max_d + top_padding_d + data_range_d * 0.08
             y_bottom_d = y_min_d - data_range_d * 0.05
             ax3.set_ylim(y_bottom_d, y_top_d)
@@ -328,7 +319,7 @@ if uploaded_file is not None:
             desc_df = desc_df.round({'start_km':1,'end_km':1,'longueur_km':1})
             desc_df.rename(columns={'start_km':'Début (km)','end_km':'Fin (km)','longueur_km':'Longueur (km)','pente_pct':'% dénivelé'}, inplace=True)
             st.dataframe(desc_df, use_container_width=True, column_config={
-                '% dénivelé': st.column_config.NumberColumn(format="%.1f%%")
+                '% dénivelé': st.column_config.NumberColumn(format="%.1f %%")
             })
         
         # --- Paramètres pour le plan ---
