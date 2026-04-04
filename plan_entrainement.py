@@ -190,8 +190,9 @@ if uploaded_file is not None:
             cotes_df = cotes_df[['start_km','end_km','longueur_km','pente_pct']]
             cotes_df = cotes_df.round({'start_km':1,'end_km':1,'longueur_km':1})
             cotes_df.rename(columns={'start_km':'Début (km)','end_km':'Fin (km)','longueur_km':'Longueur (km)','pente_pct':'% dénivelé'}, inplace=True)
-            cotes_df['% dénivelé'] = cotes_df['% dénivelé'].astype(str) + ' %'
-            st.dataframe(cotes_df, use_container_width=True)
+            st.dataframe(cotes_df, use_container_width=True, column_config={
+                '% dénivelé': st.column_config.NumberColumn(format="%.1f %%")
+            })
         
         # --- Paramètres pour le plan ---
         st.subheader("⚙️ Paramètres du plan d'entraînement")
