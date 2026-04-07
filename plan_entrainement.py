@@ -50,8 +50,8 @@ st.markdown("""
   }
 
   .stat-card {
-    background: #3A3A3A;
-    border: 1px solid #4A4A4A;
+    background: #E8E8E8;
+    border: 1px solid #CCCCCC;
     border-radius: 8px;
     padding: 1.2rem 1.4rem;
     display: flex;
@@ -65,21 +65,21 @@ st.markdown("""
     font-weight: 500;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #AAA;
+    color: #888;
   }
 
   .stat-value {
     font-family: 'Outfit', sans-serif;
     font-size: 1.6rem;
     font-weight: 600;
-    color: #F0F0F0;
+    color: #222;
     letter-spacing: -0.03em;
   }
 
   .stat-unit {
     font-family: 'Geist Mono', monospace;
     font-size: 0.75rem;
-    color: #AAA;
+    color: #666;
   }
 
   .section-divider {
@@ -99,8 +99,8 @@ st.markdown("""
   }
 
   [data-testid="stFileUploader"] {
-    background: #3A3A3A;
-    border: 1px solid #4A4A4A;
+    background: #E8E8E8;
+    border: 1px solid #CCCCCC;
     border-radius: 8px;
     padding: 0.5rem;
   }
@@ -141,6 +141,16 @@ st.markdown("""
     letter-spacing: 0.07em;
     text-transform: uppercase;
     color: #AAA;
+  }
+
+  [data-testid="stRadio"],
+  [data-testid="stSelectbox"],
+  [data-testid="stTextInput"],
+  [data-testid="stDateInput"] {
+    background: #E8E8E8;
+    border: 1px solid #CCCCCC;
+    border-radius: 8px;
+    padding: 0.5rem;
   }
 
   [data-testid="stAlert"] {
@@ -314,7 +324,7 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
 
 
 # --- Style partagé pour les graphiques matplotlib ---
-CHART_BG = "#2E2E2E"
+CHART_BG = "#E8E8E8"
 CHART_LINE_ASCENT = "#000000"
 CHART_LINE_DESCENT = "#4A6FA5"
 CHART_FILL_ASCENT = "#000000"
@@ -325,15 +335,15 @@ CHART_HIGHLIGHT = "#722F37"
 def style_ax(ax, fig):
     ax.set_facecolor(CHART_BG)
     fig.patch.set_facecolor(CHART_BG)
-    ax.grid(True, color='#555', linestyle='-', linewidth=0.5, alpha=0.6)
+    ax.grid(True, color='#C8C5BE', linestyle='-', linewidth=0.5, alpha=0.6)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_color('#555')
-    ax.spines['bottom'].set_color('#555')
-    ax.tick_params(colors='#AAA', labelsize=9)
-    ax.xaxis.label.set_color('#CCC')
-    ax.yaxis.label.set_color('#CCC')
-    ax.title.set_color('#F0F0F0')
+    ax.spines['left'].set_color('#C8C5BE')
+    ax.spines['bottom'].set_color('#C8C5BE')
+    ax.tick_params(colors='#555', labelsize=9)
+    ax.xaxis.label.set_color('#444')
+    ax.yaxis.label.set_color('#444')
+    ax.title.set_color('#222')
 
 
 # --- Header ---
@@ -481,7 +491,7 @@ if uploaded_file is not None:
             ax3.set_title("")
 
             for desc, mid, h, y_label in desc_labels:
-                ax3.text(mid, y_label, f"({desc['pente_pct']}%)",
+                ax3.text(mid, y_label, f"({desc['pente_pct']})%",
                          ha='center', va='bottom', color=CHART_LINE_DESCENT,
                          fontsize=8.5, fontweight='bold', zorder=6)
 
