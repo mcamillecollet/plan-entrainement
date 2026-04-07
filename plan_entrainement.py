@@ -362,6 +362,95 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
     return pd.DataFrame(plan)
 
 
+# --- Parsing chrono et estimation VDOT ---
+def parse_chrono(chrono_str):
+    """Parse un chrono au format 1h45, 1h45m30, 45:30, 3h30m, 25m30, etc. Retourne le temps en minutes."""
+    import re
+    chrono_str = chrono_str.strip().lower()
+    # Format HhMm ou HhMmSs
+    m = re.match(r'^(\d+)h(\d+)(?:m(\d+)?(?:s)?)?$', chrono_str)
+    if m:
+        h, mn, s = int(m.group(1)), int(m.group(2)), int(m.group(3)) if m.group(3) else 0
+        return h * 60 + mn + s / 60
+    # Format Mm ou MmSs
+    m = re.match(r'^(\d+)m(\d+)?(?:s)?$', chrono_str)
+    if m:
+        mn, s = int(m.group(1)), int(m.group(2)) if m.group(2) else 0
+        return mn + s / 60
+    # Format MM:SS ou H:MM:SS
+    parts = chrono_str.split(':')
+    if len(parts) == 2:
+        return int(parts[0]) + int(parts[1]) / 60
+    if len(parts) == 3:
+        return int(parts[0]) * 60 + int(parts[1]) + int(parts[2]) / 60
+    return None
+
+
+def estimer_vdot(distance_km, temps_minutes):
+    """Estime le VDOT à partir d'une performance (distance en km, temps en minutes).
+    Utilise la formule simplifiée de Jack Daniels."""
+    t = temps_minutes
+    d = distance_km * 1000  # en mètres
+    v = d / t  # vitesse en m/min
+
+    # VO2 estimée pour la course
+    vo2 = -4.60 + 0.182258 * v + 0.000104 * v ** 2
+
+    # Fraction de VO2max utilisable sur la durée
+    pct_max = 0.8 + 0.1894393 * np.exp(-0.012778 * t) + 0.2989558 * np.exp(-0.1932605 * t)
+
+    vdot = vo2 / pct_max
+    return round(vdot, 1)
+
+
+def allures_from_vdot(vdot):
+    """Calcule les allures d'entraînement à partir du VDOT.
+    Retourne un dict avec les allures en min/km."""
+
+    # VO2 correspondant à chaque intensité (% du VDOT)
+    zones = {
+        'Endurance fondamentale (EF)': (0.59, 0.74),
+        'Seuil (SL)': (0.83, 0.88),
+        'Tempo': (0.88, 0.92),
+        'Allure spécifique (AS)': (0.92, 0.96),
+        'Intervalles / VMA': (0.97, 1.00),
+    }
+
+    allures = {}
+    for nom, (pct_low, pct_high) in zones.items():
+        # vo2 pour chaque borne
+        vo2_low = vdot * pct_low
+        vo2_high = vdot * pct_high
+        # Inverser la formule vo2 = -4.60 + 0.182258*v + 0.000104*v^2
+        # => 0.000104*v^2 + 0.182258*v - (vo2 + 4.60) = 0
+        def vo2_to_pace(vo2_val):
+            a = 0.000104
+            b = 0.182258
+            c = -(vo2_val + 4.60)
+            discriminant = b ** 2 - 4 * a * c
+            if discriminant < 0:
+                return None
+            v = (-b + np.sqrt(discriminant)) / (2 * a)  # m/min
+            if v <= 0:
+                return None
+            return 1000 / v  # min/km
+
+        pace_slow = vo2_to_pace(vo2_low)
+        pace_fast = vo2_to_pace(vo2_high)
+        allures[nom] = (pace_fast, pace_slow)  # fast = plus rapide = moins de min/km
+
+    return allures
+
+
+def format_pace(pace_min_per_km):
+    """Formatte une allure en min/km vers M'SS\" """
+    if pace_min_per_km is None:
+        return "—"
+    minutes = int(pace_min_per_km)
+    seconds = int((pace_min_per_km - minutes) * 60)
+    return f"{minutes}'{seconds:02d}\""
+
+
 # --- Style partagé pour les graphiques matplotlib ---
 CHART_BG = "#E8E8E8"
 CHART_LINE_ASCENT = "#722F37"
@@ -531,68 +620,4 @@ if uploaded_file is not None:
             ax3.set_title("")
 
             for desc, mid, h, y_label in desc_labels:
-                ax3.text(mid, y_label, f"({desc['pente_pct']})%",
-                         ha='center', va='bottom', color=CHART_LINE_DESCENT,
-                         fontsize=8.5, fontweight='bold', zorder=6)
-
-            fig3.tight_layout()
-            st.pyplot(fig3)
-
-            st.markdown('<p class="section-label">Descentes &gt; 200 m</p>', unsafe_allow_html=True)
-            desc_df = pd.DataFrame(analyse['descentes'])
-            desc_df = desc_df[['start_km', 'end_km', 'longueur_km', 'pente_pct']]
-            desc_df = desc_df.round({'start_km': 1, 'end_km': 1, 'longueur_km': 1})
-            desc_df.index = range(1, len(desc_df) + 1)
-            desc_df.rename(columns={
-                'start_km': 'Début (km)', 'end_km': 'Fin (km)',
-                'longueur_km': 'Longueur (km)', 'pente_pct': 'Pente (%)'
-            }, inplace=True)
-            st.dataframe(desc_df, use_container_width=True, column_config={
-                'Pente (%)': st.column_config.NumberColumn(format="(%.1f) %%")
-            })
-
-        # --- Paramètres pour le plan ---
-        st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
-        st.markdown('<p class="section-label">Paramètres du plan d\'entraînement</p>', unsafe_allow_html=True)
-
-        col_a, col_b = st.columns(2)
-        with col_a:
-            niveau = st.radio("Niveau", ["Débutant", "Intermédiaire", "Avancé"], horizontal=True)
-            type_course = st.selectbox("Type de course", ["5km", "10km", "Semi-marathon", "Marathon"])
-            chrono_actuel = st.text_input("Chrono actuel (ex: 1h45)")
-            chrono_cible = st.text_input("Chrono cible (ex: 1h30)")
-        with col_b:
-            duree_semaine = st.selectbox("Durée du plan (semaines)", list(range(4, 21)), index=4)
-            sorties_par_semaine = st.selectbox("Sorties par semaine", [2, 3, 4], index=1)
-            volume_debut = st.selectbox("Volume de départ (km/semaine)", list(range(5, 21)), index=5)
-            volume_pic = st.selectbox("Volume pic (km/semaine)", list(range(15, 105, 5)), index=5)
-
-        date_course = st.date_input("Date de la course", value=None, format="DD/MM/YYYY")
-
-        st.markdown("")
-        if st.button("Générer le plan d'entraînement"):
-            plan_df = generer_plan_personnalise(
-                niveau, type_course, volume_debut, volume_pic,
-                duree_semaine, sorties_par_semaine, analyse['D_plus_m']
-            )
-
-            st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
-            st.markdown('<p class="section-label">Plan d\'entraînement personnalisé</p>', unsafe_allow_html=True)
-            st.dataframe(plan_df, use_container_width=True)
-
-            st.markdown('<p class="section-label">Volume hebdomadaire</p>', unsafe_allow_html=True)
-            fig2, ax2 = plt.subplots(figsize=(11, 3.5))
-            style_ax(ax2, fig2)
-            ax2.plot(plan_df['Semaine'], plan_df['Volume total (km)'],
-                     color=CHART_LINE_ASCENT, linewidth=2, marker='o',
-                     markersize=5, markerfacecolor='white', markeredgewidth=1.5)
-            ax2.fill_between(plan_df['Semaine'], plan_df['Volume total (km)'],
-                             alpha=0.06, color=CHART_LINE_ASCENT)
-            ax2.set_xlabel("Semaine", fontsize=10)
-            ax2.set_ylabel("Volume (km)", fontsize=10)
-            ax2.xaxis.set_major_locator(MultipleLocator(1))
-            fig2.tight_layout()
-            st.pyplot(fig2)
-
-    else:
-        st.error("Impossible d'analyser le fichier GPX.")
+                ax3.text(mid, y_label, f"({desc['pente_p
