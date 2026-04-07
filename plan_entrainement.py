@@ -3,8 +3,152 @@ import gpxpy
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
 from matplotlib.ticker import MultipleLocator
 import datetime
+
+# --- Page config ---
+st.set_page_config(
+    page_title="Plan d'entraînement",
+    page_icon=None,
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
+# --- Custom CSS (minimalist editorial style) ---
+st.markdown("""
+<style>
+  @import url('<https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap>');
+
+  html, body, [data-testid="stAppViewContainer"] {
+    background-color: #F7F6F3;
+    font-family: 'Outfit', sans-serif;
+  }
+
+  [data-testid="stAppViewContainer"] > .main {
+    padding: 2.5rem 3rem 4rem 3rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 1.75rem;
+    letter-spacing: -0.03em;
+    color: #111;
+    margin-bottom: 0.25rem;
+  }
+
+  h2, h3 {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: #222;
+  }
+
+  .stat-card {
+    background: #FFFFFF;
+    border: 1px solid #E8E6E1;
+    border-radius: 8px;
+    padding: 1.2rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .stat-label {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #888;
+  }
+
+  .stat-value {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: #111;
+    letter-spacing: -0.03em;
+  }
+
+  .stat-unit {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.75rem;
+    color: #999;
+  }
+
+  .section-divider {
+    border: none;
+    border-top: 1px solid #E8E6E1;
+    margin: 2rem 0;
+  }
+
+  .section-label {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #999;
+    margin-bottom: 1rem;
+  }
+
+  [data-testid="stFileUploader"] {
+    background: #FFFFFF;
+    border: 1px solid #E8E6E1;
+    border-radius: 8px;
+    padding: 0.5rem;
+  }
+
+  [data-testid="stDataFrame"] {
+    border: 1px solid #E8E6E1;
+    border-radius: 8px;
+    overflow: hidden;
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.8rem;
+  }
+
+  .stButton > button {
+    background: #111;
+    color: #F7F6F3;
+    border: none;
+    border-radius: 6px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 500;
+    font-size: 0.9rem;
+    padding: 0.6rem 1.5rem;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .stButton > button:hover {
+    background: #333;
+  }
+
+  [data-testid="stRadio"] label,
+  [data-testid="stSelectbox"] label,
+  [data-testid="stTextInput"] label,
+  [data-testid="stDateInput"] label {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: #888;
+  }
+
+  [data-testid="stAlert"] {
+    border-radius: 8px;
+    border: 1px solid #E8E6E1;
+    font-family: 'Outfit', sans-serif;
+  }
+</style>
+""", unsafe_allow_html=True)
+
 
 # --- Fonction d'analyse GPX ---
 def analyser_gpx(gpx_file):
@@ -20,10 +164,10 @@ def analyser_gpx(gpx_file):
                     'time': point.time
                 })
     df = pd.DataFrame(points)
-    
+
     if df.empty:
         return None
-    
+
     distances = [0.0]
     for i in range(1, len(df)):
         d = gpxpy.geo.haversine_distance(
@@ -34,9 +178,9 @@ def analyser_gpx(gpx_file):
     df['distance'] = distances
     df['cum_distance'] = df['distance'].cumsum()
     df['elevation_diff'] = df['elevation'].diff().fillna(0)
-    
+
     D_plus = df.loc[df['elevation_diff'] > 0, 'elevation_diff'].sum()
-    
+
     cotes = []
     cote_distance = 0
     cote_elevation = 0
@@ -53,7 +197,7 @@ def analyser_gpx(gpx_file):
                     'start_km': cote_distance_start,
                     'end_km': cum_d,
                     'longueur_km': cote_distance,
-                    'pente_pct': round(pente,1)
+                    'pente_pct': round(pente, 1)
                 })
             cote_distance = 0
             cote_elevation = 0
@@ -64,7 +208,7 @@ def analyser_gpx(gpx_file):
             'start_km': cote_distance_start,
             'end_km': cum_d,
             'longueur_km': cote_distance,
-            'pente_pct': round(pente,1)
+            'pente_pct': round(pente, 1)
         })
 
     descentes = []
@@ -83,7 +227,7 @@ def analyser_gpx(gpx_file):
                     'start_km': desc_distance_start,
                     'end_km': cum_d,
                     'longueur_km': desc_distance,
-                    'pente_pct': round(pente,1)
+                    'pente_pct': round(pente, 1)
                 })
             desc_distance = 0
             desc_elevation = 0
@@ -94,9 +238,9 @@ def analyser_gpx(gpx_file):
             'start_km': desc_distance_start,
             'end_km': cum_d,
             'longueur_km': desc_distance,
-            'pente_pct': round(pente,1)
+            'pente_pct': round(pente, 1)
         })
-    
+
     return {
         'distance_totale_km': df['cum_distance'].iloc[-1],
         'altitude_min_m': df['elevation'].min(),
@@ -106,6 +250,7 @@ def analyser_gpx(gpx_file):
         'cotes': cotes,
         'descentes': descentes
     }
+
 
 # --- Fonction pour générer plan personnalisé ---
 def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, duree_semaine, sorties_par_semaine, D_plus):
@@ -165,24 +310,67 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
 
     return pd.DataFrame(plan)
 
-# --- Streamlit UI ---
-st.title("🏃 Analyse GPX et Plan d'entraînement personnalisé")
 
-uploaded_file = st.file_uploader("📁 Upload ton fichier GPX", type=['gpx'])
+# --- Style partagé pour les graphiques matplotlib ---
+CHART_BG = "#F7F6F3"
+CHART_LINE_ASCENT = "#1A1A1A"
+CHART_LINE_DESCENT = "#4A6FA5"
+CHART_FILL_ASCENT = "#1A1A1A"
+CHART_FILL_DESCENT = "#4A6FA5"
+CHART_HIGHLIGHT = "#C94040"
+
+
+def style_ax(ax, fig):
+    ax.set_facecolor(CHART_BG)
+    fig.patch.set_facecolor(CHART_BG)
+    ax.grid(True, color='#C8C5BE', linestyle='-', linewidth=0.5, alpha=0.6)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_color('#C8C5BE')
+    ax.spines['bottom'].set_color('#C8C5BE')
+    ax.tick_params(colors='#888', labelsize=9)
+    ax.xaxis.label.set_color('#555')
+    ax.yaxis.label.set_color('#555')
+    ax.title.set_color('#111')
+
+
+# --- Header ---
+st.markdown("# Analyse GPX & Plan d'entraînement")
+st.markdown('<p class="section-label">Analyse de parcours — Planification personnalisée</p>', unsafe_allow_html=True)
+st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
+
+uploaded_file = st.file_uploader("Importer un fichier GPX", type=['gpx'])
 
 if uploaded_file is not None:
     analyse = analyser_gpx(uploaded_file)
-    
+
     if analyse:
-        st.subheader("📊 Analyse du parcours")
-        st.write(f"Distance totale : {analyse['distance_totale_km']:.2f} km")
-        st.write(f"Altitude min : {analyse['altitude_min_m']:.0f} m")
-        st.write(f"Altitude max : {analyse['altitude_max_m']:.0f} m")
-        st.write(f"D+ total : {analyse['D_plus_m']:.0f} m")
-        
+        # --- Statistiques parcours ---
+        st.markdown('<p class="section-label">Statistiques du parcours</p>', unsafe_allow_html=True)
+        col1, col2, col3, col4 = st.columns(4)
+        stats = [
+            (col1, "Distance", f"{analyse['distance_totale_km']:.2f}", "km"),
+            (col2, "Altitude min", f"{analyse['altitude_min_m']:.0f}", "m"),
+            (col3, "Altitude max", f"{analyse['altitude_max_m']:.0f}", "m"),
+            (col4, "D+", f"{analyse['D_plus_m']:.0f}", "m"),
+        ]
+        for col, label, value, unit in stats:
+            with col:
+                st.markdown(f"""
+                <div class="stat-card">
+                  <span class="stat-label">{label}</span>
+                  <span class="stat-value">{value} <span class="stat-unit">{unit}</span></span>
+                </div>
+                """, unsafe_allow_html=True)
+
+        st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
+
         # --- Graphique profil d'altitude (côtes) ---
+        st.markdown('<p class="section-label">Profil d\'altitude — montées</p>', unsafe_allow_html=True)
         df = analyse['df']
-        fig, ax = plt.subplots(figsize=(10,4))
+        fig, ax = plt.subplots(figsize=(11, 3.5))
+        style_ax(ax, fig)
+
         y_min_data, y_max_data = df['elevation'].min(), df['elevation'].max()
         data_range = y_max_data - y_min_data if y_max_data != y_min_data else 100
 
@@ -193,7 +381,7 @@ if uploaded_file is not None:
         cote_labels = []
         for cote in analyse['cotes']:
             mid = (cote['start_km'] + cote['end_km']) / 2
-            h = df.loc[(df['cum_distance']>=cote['start_km']) & (df['cum_distance']<=cote['end_km']), 'elevation'].max()
+            h = df.loc[(df['cum_distance'] >= cote['start_km']) & (df['cum_distance'] <= cote['end_km']), 'elevation'].max()
             y_label = h + label_base
             for prev_x, prev_y in label_positions:
                 if abs(mid - prev_x) < min_gap_x:
@@ -202,53 +390,55 @@ if uploaded_file is not None:
             cote_labels.append((cote, mid, h, y_label))
 
         max_y_label = max((y for _, y in label_positions), default=y_max_data)
-        y_top = max_y_label + data_range * 0.06
+        y_top = max_y_label + data_range * 0.10
         y_bottom = y_min_data - data_range * 0.05
         ax.set_ylim(y_bottom, y_top)
 
-        ax.fill_between(df['cum_distance'], df['elevation'], y_bottom, color='#cccccc', alpha=0.5)
+        ax.fill_between(df['cum_distance'], df['elevation'], y_bottom, color=CHART_FILL_ASCENT, alpha=0.06)
 
         for cote, mid, h, y_label in cote_labels:
             mask = (df['cum_distance'] >= cote['start_km']) & (df['cum_distance'] <= cote['end_km'])
             df_section = df[mask]
             if not df_section.empty:
-                ax.fill_between(df_section['cum_distance'], df_section['elevation'],
-                                y_top, color='#7B2D42', alpha=0.1)
+                ax.fill_between(df_section['cum_distance'], df_section['elevation'], y_bottom,
+                                color=CHART_HIGHLIGHT, alpha=0.15)
 
-        ax.plot(df['cum_distance'], df['elevation'], color='#7B2D42', linewidth=2)
-        ax.set_facecolor('#f5f5f5')
-        fig.patch.set_facecolor('#f5f5f5')
-        ax.grid(True, color='black', linestyle='--', linewidth=0.7, alpha=0.3)
+        ax.plot(df['cum_distance'], df['elevation'], color=CHART_LINE_ASCENT, linewidth=1.5)
         ax.xaxis.set_major_locator(MultipleLocator(1))
         ax.set_xlim(0, df['cum_distance'].iloc[-1])
-        ax.set_xlabel("Distance (km)")
-        ax.set_ylabel("Altitude (m)")
-        ax.set_title("Profil d'altitude du parcours")
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        ax.spines['left'].set_visible(False)
+        ax.set_xlabel("Distance (km)", fontsize=10)
+        ax.set_ylabel("Altitude (m)", fontsize=10)
+        ax.set_title("")
 
         for cote, mid, h, y_label in cote_labels:
             ax.text(mid, y_label, f"{cote['pente_pct']}%",
-                    ha='center', va='bottom', color='#7B2D42', fontsize=9, fontweight='bold', zorder=6)
+                    ha='center', va='bottom', color=CHART_HIGHLIGHT,
+                    fontsize=8.5, fontweight='bold', zorder=6)
 
+        fig.tight_layout()
         st.pyplot(fig)
-        
+
         # --- Tableau des côtes ---
         if analyse['cotes']:
-            st.subheader("🗻 Tableau des côtes (>200m)")
+            st.markdown('<p class="section-label">Montées &gt; 200 m</p>', unsafe_allow_html=True)
             cotes_df = pd.DataFrame(analyse['cotes'])
-            cotes_df = cotes_df[['start_km','end_km','longueur_km','pente_pct']]
-            cotes_df = cotes_df.round({'start_km':1,'end_km':1,'longueur_km':1})
-            cotes_df.rename(columns={'start_km':'Début (km)','end_km':'Fin (km)','longueur_km':'Longueur (km)','pente_pct':'% dénivelé'}, inplace=True)
+            cotes_df = cotes_df[['start_km', 'end_km', 'longueur_km', 'pente_pct']]
+            cotes_df = cotes_df.round({'start_km': 1, 'end_km': 1, 'longueur_km': 1})
+            cotes_df.rename(columns={
+                'start_km': 'Début (km)', 'end_km': 'Fin (km)',
+                'longueur_km': 'Longueur (km)', 'pente_pct': 'Pente (%)'
+            }, inplace=True)
             st.dataframe(cotes_df, use_container_width=True, column_config={
-                '% dénivelé': st.column_config.NumberColumn(format="%.1f %%")
+                'Pente (%)': st.column_config.NumberColumn(format="%.1f %%")
             })
 
         # --- Graphique descentes ---
         if analyse['descentes']:
-            st.subheader("📉 Profil des descentes (>200m)")
-            fig3, ax3 = plt.subplots(figsize=(10,4))
+            st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
+            st.markdown('<p class="section-label">Profil d\'altitude — descentes</p>', unsafe_allow_html=True)
+            fig3, ax3 = plt.subplots(figsize=(11, 3.5))
+            style_ax(ax3, fig3)
+
             y_min_d, y_max_d = df['elevation'].min(), df['elevation'].max()
             data_range_d = y_max_d - y_min_d if y_max_d != y_min_d else 100
 
@@ -259,7 +449,7 @@ if uploaded_file is not None:
             desc_labels = []
             for desc in analyse['descentes']:
                 mid = (desc['start_km'] + desc['end_km']) / 2
-                h = df.loc[(df['cum_distance']>=desc['start_km']) & (df['cum_distance']<=desc['end_km']), 'elevation'].max()
+                h = df.loc[(df['cum_distance'] >= desc['start_km']) & (df['cum_distance'] <= desc['end_km']), 'elevation'].max()
                 y_label = h + label_base_d
                 for prev_x, prev_y in label_positions_d:
                     if abs(mid - prev_x) < min_gap_x_d:
@@ -268,75 +458,88 @@ if uploaded_file is not None:
                 desc_labels.append((desc, mid, h, y_label))
 
             max_y_label_d = max((y for _, y in label_positions_d), default=y_max_d)
-            y_top_d = max_y_label_d + data_range_d * 0.06
+            y_top_d = max_y_label_d + data_range_d * 0.10
             y_bottom_d = y_min_d - data_range_d * 0.05
             ax3.set_ylim(y_bottom_d, y_top_d)
 
-            ax3.fill_between(df['cum_distance'], df['elevation'], y_bottom_d, color='#cccccc', alpha=0.5)
+            ax3.fill_between(df['cum_distance'], df['elevation'], y_bottom_d, color=CHART_FILL_DESCENT, alpha=0.06)
 
             for desc, mid, h, y_label in desc_labels:
                 mask = (df['cum_distance'] >= desc['start_km']) & (df['cum_distance'] <= desc['end_km'])
                 df_section = df[mask]
                 if not df_section.empty:
-                    ax3.fill_between(df_section['cum_distance'], df_section['elevation'],
-                                     y_top_d, color='#4A90C4', alpha=0.1)
+                    ax3.fill_between(df_section['cum_distance'], df_section['elevation'], y_bottom_d,
+                                     color=CHART_LINE_DESCENT, alpha=0.15)
 
-            ax3.plot(df['cum_distance'], df['elevation'], color='#4A90C4', linewidth=2)
-            ax3.set_facecolor('#f5f5f5')
-            fig3.patch.set_facecolor('#f5f5f5')
-            ax3.grid(True, color='black', linestyle='--', linewidth=0.7, alpha=0.3)
+            ax3.plot(df['cum_distance'], df['elevation'], color=CHART_LINE_DESCENT, linewidth=1.5)
             ax3.xaxis.set_major_locator(MultipleLocator(1))
             ax3.set_xlim(0, df['cum_distance'].iloc[-1])
-            ax3.set_xlabel("Distance (km)")
-            ax3.set_ylabel("Altitude (m)")
-            ax3.set_title("Profil des descentes")
-            ax3.spines['top'].set_visible(False)
-            ax3.spines['right'].set_visible(False)
-            ax3.spines['left'].set_visible(False)
+            ax3.set_xlabel("Distance (km)", fontsize=10)
+            ax3.set_ylabel("Altitude (m)", fontsize=10)
+            ax3.set_title("")
 
             for desc, mid, h, y_label in desc_labels:
                 ax3.text(mid, y_label, f"({desc['pente_pct']}) %",
-                         ha='center', va='bottom', color='#4A90C4', fontsize=9, fontweight='bold', zorder=6)
+                         ha='center', va='bottom', color=CHART_LINE_DESCENT,
+                         fontsize=8.5, fontweight='bold', zorder=6)
 
+            fig3.tight_layout()
             st.pyplot(fig3)
 
-            st.subheader("📋 Tableau des descentes (>200m)")
+            st.markdown('<p class="section-label">Descentes &gt; 200 m</p>', unsafe_allow_html=True)
             desc_df = pd.DataFrame(analyse['descentes'])
-            desc_df = desc_df[['start_km','end_km','longueur_km','pente_pct']]
-            desc_df = desc_df.round({'start_km':1,'end_km':1,'longueur_km':1})
-            desc_df.rename(columns={'start_km':'Début (km)','end_km':'Fin (km)','longueur_km':'Longueur (km)','pente_pct':'% dénivelé'}, inplace=True)
+            desc_df = desc_df[['start_km', 'end_km', 'longueur_km', 'pente_pct']]
+            desc_df = desc_df.round({'start_km': 1, 'end_km': 1, 'longueur_km': 1})
+            desc_df.rename(columns={
+                'start_km': 'Début (km)', 'end_km': 'Fin (km)',
+                'longueur_km': 'Longueur (km)', 'pente_pct': 'Pente (%)'
+            }, inplace=True)
             st.dataframe(desc_df, use_container_width=True, column_config={
-                '% dénivelé': st.column_config.NumberColumn(format="(%.1f) %%")
+                'Pente (%)': st.column_config.NumberColumn(format="(%.1f) %%")
             })
-        
+
         # --- Paramètres pour le plan ---
-        st.subheader("⚙️ Paramètres du plan d'entraînement")
-        niveau = st.radio("Niveau", ["Débutant", "Intermédiaire", "Avancé"], horizontal=True)
-        type_course = st.selectbox("Type de course", ["5km", "10km", "Semi-marathon", "Marathon"])
-        chrono_actuel = st.text_input("Chrono actuel (ex: 1h45)")
-        chrono_cible = st.text_input("Chrono cible (ex: 1h30)")
-        duree_semaine = st.selectbox("Durée du plan (semaines)", list(range(4, 21)), index=4)
-        sorties_par_semaine = st.selectbox("Nombre de sorties par semaine", [2, 3, 4], index=1)
-        volume_debut = st.selectbox("Volume hebdomadaire pour commencer (km)", list(range(5, 21)), index=5)
-        volume_pic = st.selectbox("Volume hebdomadaire pic de préparation (km)", list(range(15, 105, 5)), index=5)
+        st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
+        st.markdown('<p class="section-label">Paramètres du plan d\'entraînement</p>', unsafe_allow_html=True)
+
+        col_a, col_b = st.columns(2)
+        with col_a:
+            niveau = st.radio("Niveau", ["Débutant", "Intermédiaire", "Avancé"], horizontal=True)
+            type_course = st.selectbox("Type de course", ["5km", "10km", "Semi-marathon", "Marathon"])
+            chrono_actuel = st.text_input("Chrono actuel (ex: 1h45)")
+            chrono_cible = st.text_input("Chrono cible (ex: 1h30)")
+        with col_b:
+            duree_semaine = st.selectbox("Durée du plan (semaines)", list(range(4, 21)), index=4)
+            sorties_par_semaine = st.selectbox("Sorties par semaine", [2, 3, 4], index=1)
+            volume_debut = st.selectbox("Volume de départ (km/semaine)", list(range(5, 21)), index=5)
+            volume_pic = st.selectbox("Volume pic (km/semaine)", list(range(15, 105, 5)), index=5)
+
         date_course = st.date_input("Date de la course", value=None, format="DD/MM/YYYY")
-        
+
+        st.markdown("")
         if st.button("Générer le plan d'entraînement"):
-            plan_df = generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, duree_semaine, sorties_par_semaine, analyse['D_plus_m'])
-            
-            st.subheader("📋 Plan d'entraînement personnalisé")
+            plan_df = generer_plan_personnalise(
+                niveau, type_course, volume_debut, volume_pic,
+                duree_semaine, sorties_par_semaine, analyse['D_plus_m']
+            )
+
+            st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
+            st.markdown('<p class="section-label">Plan d\'entraînement personnalisé</p>', unsafe_allow_html=True)
             st.dataframe(plan_df, use_container_width=True)
-            
-            fig2, ax2 = plt.subplots(figsize=(10,4))
-            ax2.plot(plan_df['Semaine'], plan_df['Volume total (km)'], color='#7B2D42', linewidth=3, marker='o')
-            ax2.set_facecolor('#f5f5f5')
-            fig2.patch.set_facecolor('#f5f5f5')
-            ax2.set_title("Évolution du volume hebdomadaire", fontsize=14, weight='bold')
-            ax2.set_xlabel("Semaine", fontsize=12)
-            ax2.set_ylabel("Volume total (km)", fontsize=12)
-            ax2.grid(True, color='black', linestyle='--', linewidth=0.7, alpha=0.3)
+
+            st.markdown('<p class="section-label">Volume hebdomadaire</p>', unsafe_allow_html=True)
+            fig2, ax2 = plt.subplots(figsize=(11, 3.5))
+            style_ax(ax2, fig2)
+            ax2.plot(plan_df['Semaine'], plan_df['Volume total (km)'],
+                     color=CHART_LINE_ASCENT, linewidth=2, marker='o',
+                     markersize=5, markerfacecolor='white', markeredgewidth=1.5)
+            ax2.fill_between(plan_df['Semaine'], plan_df['Volume total (km)'],
+                             alpha=0.06, color=CHART_LINE_ASCENT)
+            ax2.set_xlabel("Semaine", fontsize=10)
+            ax2.set_ylabel("Volume (km)", fontsize=10)
             ax2.xaxis.set_major_locator(MultipleLocator(1))
+            fig2.tight_layout()
             st.pyplot(fig2)
-        
+
     else:
         st.error("Impossible d'analyser le fichier GPX.")
