@@ -50,8 +50,8 @@ st.markdown("""
   }
 
   .stat-card {
-    background: #E8E8E8;
-    border: 1px solid #CCCCCC;
+    background: #B0B0B0;
+    border: 1px solid #999999;
     border-radius: 8px;
     padding: 1.2rem 1.4rem;
     display: flex;
@@ -99,14 +99,15 @@ st.markdown("""
   }
 
   [data-testid="stFileUploader"] {
-    background: #E8E8E8;
-    border: 1px solid #CCCCCC;
+    background: #B0B0B0;
+    border: 1px solid #999999;
     border-radius: 8px;
     padding: 0.5rem;
   }
 
   [data-testid="stDataFrame"] {
-    border: 1px solid #4A4A4A;
+    background: #B0B0B0;
+    border: 1px solid #999999;
     border-radius: 8px;
     overflow: hidden;
     font-family: 'Geist Mono', monospace;
@@ -147,8 +148,8 @@ st.markdown("""
   [data-testid="stSelectbox"],
   [data-testid="stTextInput"],
   [data-testid="stDateInput"] {
-    background: #E8E8E8;
-    border: 1px solid #CCCCCC;
+    background: #B0B0B0;
+    border: 1px solid #999999;
     border-radius: 8px;
     padding: 0.5rem;
   }
