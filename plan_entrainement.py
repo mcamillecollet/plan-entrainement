@@ -108,7 +108,7 @@ st.markdown("""
   [data-testid="stFileUploader"] label {
     font-family: 'Outfit', sans-serif;
     font-weight: 500;
-    font-size: 1.1rem;
+    font-size: 1.4rem;
     letter-spacing: 0.01em;
     color: #F0F0F0;
   }
@@ -121,6 +121,23 @@ st.markdown("""
     font-family: 'Geist Mono', monospace;
     font-size: 0.8rem;
     color: #2E2E2E;
+  }
+
+  [data-testid="stDataFrame"] [data-testid="stDataFrameResizable"],
+  [data-testid="stDataFrame"] .stDataFrame,
+  [data-testid="stDataFrame"] iframe {
+    background: #E8E8E8 !important;
+  }
+
+  [data-testid="stDataFrame"] th,
+  [data-testid="stDataFrame"] td,
+  [data-testid="stDataFrame"] .col_heading,
+  [data-testid="stDataFrame"] .row_heading,
+  [data-testid="stDataFrame"] .data,
+  [data-testid="stDataFrame"] [role="gridcell"],
+  [data-testid="stDataFrame"] [role="columnheader"] {
+    background-color: #E8E8E8 !important;
+    color: #2E2E2E !important;
   }
 
   .stButton > button {
