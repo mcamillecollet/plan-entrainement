@@ -201,6 +201,63 @@ st.markdown("""
     color: #2E2E2E !important;
   }
 
+  /* Radio buttons: option background matching other inputs */
+  [data-testid="stRadio"] div[role="radiogroup"] label {
+    background: #B0B0B0 !important;
+    border-radius: 4px;
+    padding: 0.2rem 0.4rem;
+  }
+
+  /* Radio button circle/dot in anthracite */
+  [data-testid="stRadio"] div[role="radiogroup"] label div[data-testid="stMarkdownContainer"],
+  [data-testid="stRadio"] div[role="radiogroup"] input[type="radio"] {
+    accent-color: #2E2E2E !important;
+  }
+
+  /* Date picker popover: month/year text, arrows, and selection in anthracite */
+  [data-testid="stDateInput"] div[data-baseweb="popover"] {
+    background: #B0B0B0 !important;
+  }
+
+  [data-testid="stDateInput"] div[data-baseweb="calendar"] {
+    background: #B0B0B0 !important;
+  }
+
+  /* Month/year header text */
+  [data-testid="stDateInput"] div[data-baseweb="calendar"] div[data-baseweb="calendar-header"] *,
+  [data-testid="stDateInput"] div[data-baseweb="popover"] div[data-baseweb="calendar-header"] * {
+    color: #2E2E2E !important;
+  }
+
+  /* Navigation arrows */
+  [data-testid="stDateInput"] div[data-baseweb="calendar"] button svg,
+  [data-testid="stDateInput"] div[data-baseweb="popover"] button svg {
+    fill: #2E2E2E !important;
+    color: #2E2E2E !important;
+  }
+
+  [data-testid="stDateInput"] div[data-baseweb="calendar"] button,
+  [data-testid="stDateInput"] div[data-baseweb="popover"] button {
+    color: #2E2E2E !important;
+  }
+
+  /* Selected day highlight in anthracite */
+  [data-testid="stDateInput"] div[data-baseweb="calendar"] div[role="gridcell"] div[data-highlighted="true"],
+  [data-testid="stDateInput"] div[data-baseweb="calendar"] div[role="gridcell"] div[aria-selected="true"] {
+    background-color: #2E2E2E !important;
+    color: #FFFFFF !important;
+  }
+
+  /* Day numbers in anthracite */
+  [data-testid="stDateInput"] div[data-baseweb="calendar"] div[role="gridcell"] div {
+    color: #2E2E2E !important;
+  }
+
+  /* Weekday headers */
+  [data-testid="stDateInput"] div[data-baseweb="calendar"] div[role="row"] div {
+    color: #2E2E2E !important;
+  }
+
   [data-testid="stAlert"] {
     border-radius: 8px;
     border: 1px solid #4A4A4A;
@@ -427,11 +484,8 @@ def allures_from_vdot(vdot):
 
     allures = {}
     for nom, (pct_low, pct_high) in zones.items():
-        # vo2 pour chaque borne
         vo2_low = vdot * pct_low
         vo2_high = vdot * pct_high
-        # Inverser la formule vo2 = -4.60 + 0.182258*v + 0.000104*v^2
-        # => 0.000104*v^2 + 0.182258*v - (vo2 + 4.60) = 0
         def vo2_to_pace(vo2_val):
             a = 0.000104
             b = 0.182258
@@ -439,14 +493,14 @@ def allures_from_vdot(vdot):
             discriminant = b ** 2 - 4 * a * c
             if discriminant < 0:
                 return None
-            v = (-b + np.sqrt(discriminant)) / (2 * a)  # m/min
+            v = (-b + np.sqrt(discriminant)) / (2 * a)
             if v <= 0:
                 return None
-            return 1000 / v  # min/km
+            return 1000 / v
 
         pace_slow = vo2_to_pace(vo2_low)
         pace_fast = vo2_to_pace(vo2_high)
-        allures[nom] = (pace_fast, pace_slow)  # fast = plus rapide = moins de min/km
+        allures[nom] = (pace_fast, pace_slow)
 
     return allures
 
