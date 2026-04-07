@@ -192,6 +192,15 @@ st.markdown("""
     padding: 0.5rem;
   }
 
+  [data-testid="stRadio"] div[role="radiogroup"] label span,
+  [data-testid="stRadio"] div[role="radiogroup"] label p,
+  [data-testid="stSelectbox"] div[data-baseweb="select"] span,
+  [data-testid="stSelectbox"] div[data-baseweb="select"] div,
+  [data-testid="stTextInput"] input,
+  [data-testid="stDateInput"] input {
+    color: #2E2E2E !important;
+  }
+
   [data-testid="stAlert"] {
     border-radius: 8px;
     border: 1px solid #4A4A4A;
