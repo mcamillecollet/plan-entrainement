@@ -201,6 +201,63 @@ st.markdown("""
     color: #2E2E2E !important;
   }
 
+  /* Radio buttons: option background matching other inputs */
+  [data-testid="stRadio"] div[role="radiogroup"] label {
+    background: #B0B0B0 !important;
+    border-radius: 4px;
+    padding: 0.2rem 0.4rem;
+  }
+
+  /* Radio button circle/dot in anthracite */
+  [data-testid="stRadio"] div[role="radiogroup"] label div[data-testid="stMarkdownContainer"],
+  [data-testid="stRadio"] div[role="radiogroup"] input[type="radio"] {
+    accent-color: #2E2E2E !important;
+  }
+
+  /* Date picker popover: month/year text, arrows, and selection in anthracite */
+  [data-testid="stDateInput"] div[data-baseweb="popover"] {
+    background: #B0B0B0 !important;
+  }
+
+  [data-testid="stDateInput"] div[data-baseweb="calendar"] {
+    background: #B0B0B0 !important;
+  }
+
+  /* Month/year header text */
+  [data-testid="stDateInput"] div[data-baseweb="calendar"] div[data-baseweb="calendar-header"] *,
+  [data-testid="stDateInput"] div[data-baseweb="popover"] div[data-baseweb="calendar-header"] * {
+    color: #2E2E2E !important;
+  }
+
+  /* Navigation arrows */
+  [data-testid="stDateInput"] div[data-baseweb="calendar"] button svg,
+  [data-testid="stDateInput"] div[data-baseweb="popover"] button svg {
+    fill: #2E2E2E !important;
+    color: #2E2E2E !important;
+  }
+
+  [data-testid="stDateInput"] div[data-baseweb="calendar"] button,
+  [data-testid="stDateInput"] div[data-baseweb="popover"] button {
+    color: #2E2E2E !important;
+  }
+
+  /* Selected day highlight in anthracite */
+  [data-testid="stDateInput"] div[data-baseweb="calendar"] div[role="gridcell"] div[data-highlighted="true"],
+  [data-testid="stDateInput"] div[data-baseweb="calendar"] div[role="gridcell"] div[aria-selected="true"] {
+    background-color: #2E2E2E !important;
+    color: #FFFFFF !important;
+  }
+
+  /* Day numbers in anthracite */
+  [data-testid="stDateInput"] div[data-baseweb="calendar"] div[role="gridcell"] div {
+    color: #2E2E2E !important;
+  }
+
+  /* Weekday headers */
+  [data-testid="stDateInput"] div[data-baseweb="calendar"] div[role="row"] div {
+    color: #2E2E2E !important;
+  }
+
   [data-testid="stAlert"] {
     border-radius: 8px;
     border: 1px solid #4A4A4A;
