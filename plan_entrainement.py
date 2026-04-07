@@ -65,21 +65,21 @@ st.markdown("""
     font-weight: 500;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #888;
+    color: #FFFFFF;
   }
 
   .stat-value {
     font-family: 'Outfit', sans-serif;
     font-size: 1.6rem;
     font-weight: 600;
-    color: #222;
+    color: #FFFFFF;
     letter-spacing: -0.03em;
   }
 
   .stat-unit {
     font-family: 'Geist Mono', monospace;
     font-size: 0.75rem;
-    color: #666;
+    color: #FFFFFF;
   }
 
   .section-divider {
@@ -99,19 +99,27 @@ st.markdown("""
   }
 
   [data-testid="stFileUploader"] {
-    background: #B0B0B0;
-    border: 1px solid #999999;
+    background: #555;
+    border: 1px solid #666;
     border-radius: 8px;
     padding: 0.5rem;
   }
 
+  [data-testid="stFileUploader"] label {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: #F0F0F0;
+  }
+
   [data-testid="stDataFrame"] {
-    background: #B0B0B0;
-    border: 1px solid #999999;
+    background: #E8E8E8;
+    border: 1px solid #CCCCCC;
     border-radius: 8px;
     overflow: hidden;
     font-family: 'Geist Mono', monospace;
     font-size: 0.8rem;
+    color: #B0B0B0;
   }
 
   .stButton > button {
@@ -141,7 +149,7 @@ st.markdown("""
     font-weight: 500;
     letter-spacing: 0.07em;
     text-transform: uppercase;
-    color: #AAA;
+    color: #FFFFFF;
   }
 
   [data-testid="stRadio"],
@@ -326,9 +334,9 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
 
 # --- Style partagé pour les graphiques matplotlib ---
 CHART_BG = "#E8E8E8"
-CHART_LINE_ASCENT = "#000000"
+CHART_LINE_ASCENT = "#722F37"
 CHART_LINE_DESCENT = "#4A6FA5"
-CHART_FILL_ASCENT = "#000000"
+CHART_FILL_ASCENT = "#722F37"
 CHART_FILL_DESCENT = "#4A6FA5"
 CHART_HIGHLIGHT = "#722F37"
 
