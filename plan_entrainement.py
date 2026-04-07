@@ -362,6 +362,95 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
     return pd.DataFrame(plan)
 
 
+# --- Parsing chrono et estimation VDOT ---
+def parse_chrono(chrono_str):
+    """Parse un chrono au format 1h45, 1h45m30, 45:30, 3h30m, 25m30, etc. Retourne le temps en minutes."""
+    import re
+    chrono_str = chrono_str.strip().lower()
+    # Format HhMm ou HhMmSs
+    m = re.match(r'^(\d+)h(\d+)(?:m(\d+)?(?:s)?)?$', chrono_str)
+    if m:
+        h, mn, s = int(m.group(1)), int(m.group(2)), int(m.group(3)) if m.group(3) else 0
+        return h * 60 + mn + s / 60
+    # Format Mm ou MmSs
+    m = re.match(r'^(\d+)m(\d+)?(?:s)?$', chrono_str)
+    if m:
+        mn, s = int(m.group(1)), int(m.group(2)) if m.group(2) else 0
+        return mn + s / 60
+    # Format MM:SS ou H:MM:SS
+    parts = chrono_str.split(':')
+    if len(parts) == 2:
+        return int(parts[0]) + int(parts[1]) / 60
+    if len(parts) == 3:
+        return int(parts[0]) * 60 + int(parts[1]) + int(parts[2]) / 60
+    return None
+
+
+def estimer_vdot(distance_km, temps_minutes):
+    """Estime le VDOT à partir d'une performance (distance en km, temps en minutes).
+    Utilise la formule simplifiée de Jack Daniels."""
+    t = temps_minutes
+    d = distance_km * 1000  # en mètres
+    v = d / t  # vitesse en m/min
+
+    # VO2 estimée pour la course
+    vo2 = -4.60 + 0.182258 * v + 0.000104 * v ** 2
+
+    # Fraction de VO2max utilisable sur la durée
+    pct_max = 0.8 + 0.1894393 * np.exp(-0.012778 * t) + 0.2989558 * np.exp(-0.1932605 * t)
+
+    vdot = vo2 / pct_max
+    return round(vdot, 1)
+
+
+def allures_from_vdot(vdot):
+    """Calcule les allures d'entraînement à partir du VDOT.
+    Retourne un dict avec les allures en min/km."""
+
+    # VO2 correspondant à chaque intensité (% du VDOT)
+    zones = {
+        'Endurance fondamentale (EF)': (0.59, 0.74),
+        'Seuil (SL)': (0.83, 0.88),
+        'Tempo': (0.88, 0.92),
+        'Allure spécifique (AS)': (0.92, 0.96),
+        'Intervalles / VMA': (0.97, 1.00),
+    }
+
+    allures = {}
+    for nom, (pct_low, pct_high) in zones.items():
+        # vo2 pour chaque borne
+        vo2_low = vdot * pct_low
+        vo2_high = vdot * pct_high
+        # Inverser la formule vo2 = -4.60 + 0.182258*v + 0.000104*v^2
+        # => 0.000104*v^2 + 0.182258*v - (vo2 + 4.60) = 0
+        def vo2_to_pace(vo2_val):
+            a = 0.000104
+            b = 0.182258
+            c = -(vo2_val + 4.60)
+            discriminant = b ** 2 - 4 * a * c
+            if discriminant < 0:
+                return None
+            v = (-b + np.sqrt(discriminant)) / (2 * a)  # m/min
+            if v <= 0:
+                return None
+            return 1000 / v  # min/km
+
+        pace_slow = vo2_to_pace(vo2_low)
+        pace_fast = vo2_to_pace(vo2_high)
+        allures[nom] = (pace_fast, pace_slow)  # fast = plus rapide = moins de min/km
+
+    return allures
+
+
+def format_pace(pace_min_per_km):
+    """Formatte une allure en min/km vers M'SS\" """
+    if pace_min_per_km is None:
+        return "—"
+    minutes = int(pace_min_per_km)
+    seconds = int((pace_min_per_km - minutes) * 60)
+    return f"{minutes}'{seconds:02d}\""
+
+
 # --- Style partagé pour les graphiques matplotlib ---
 CHART_BG = "#E8E8E8"
 CHART_LINE_ASCENT = "#722F37"
@@ -568,6 +657,74 @@ if uploaded_file is not None:
             volume_pic = st.selectbox("Volume pic (km/semaine)", list(range(15, 105, 5)), index=5)
 
         date_course = st.date_input("Date de la course", value=None, format="DD/MM/YYYY")
+
+        # --- Estimation VDOT et allures ---
+        if chrono_actuel:
+            distances_map = {"5km": 5, "10km": 10, "Semi-marathon": 21.0975, "Marathon": 42.195}
+            temps = parse_chrono(chrono_actuel)
+            if temps:
+                dist_km = distances_map[type_course]
+                vdot = estimer_vdot(dist_km, temps)
+
+                st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
+                st.markdown('<p class="section-label">Estimation du niveau & allures d\'entraînement</p>', unsafe_allow_html=True)
+
+                # Afficher VDOT
+                vitesse_kmh = round(dist_km / (temps / 60), 1)
+                allure_moy = format_pace(temps / dist_km)
+                st.markdown(f"""
+                <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                  <div class="stat-card" style="flex: 1; min-width: 150px;">
+                    <span class="stat-label">VDOT estimé</span>
+                    <span class="stat-value">{vdot}</span>
+                  </div>
+                  <div class="stat-card" style="flex: 1; min-width: 150px;">
+                    <span class="stat-label">Vitesse moyenne</span>
+                    <span class="stat-value">{vitesse_kmh} <span class="stat-unit">km/h</span></span>
+                  </div>
+                  <div class="stat-card" style="flex: 1; min-width: 150px;">
+                    <span class="stat-label">Allure moyenne</span>
+                    <span class="stat-value">{allure_moy} <span class="stat-unit">/km</span></span>
+                  </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+                # Tableau des allures
+                allures = allures_from_vdot(vdot)
+                allures_data = []
+                for nom, (pace_fast, pace_slow) in allures.items():
+                    vitesse_fast = round(60 / pace_fast, 1) if pace_fast else None
+                    vitesse_slow = round(60 / pace_slow, 1) if pace_slow else None
+                    allures_data.append({
+                        'Zone': nom,
+                        'Allure rapide': format_pace(pace_fast),
+                        'Allure lente': format_pace(pace_slow),
+                        'Vitesse (km/h)': f"{vitesse_slow} – {vitesse_fast}" if vitesse_slow and vitesse_fast else "—"
+                    })
+
+                st.markdown('<p class="section-label">Zones d\'allure</p>', unsafe_allow_html=True)
+
+                # Affichage en cards
+                for row in allures_data:
+                    st.markdown(f"""
+                    <div style="background: #B0B0B0; border: 1px solid #999; border-radius: 8px;
+                                padding: 0.8rem 1.2rem; margin-bottom: 0.5rem;
+                                display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                      <span style="font-family: 'Outfit', sans-serif; font-weight: 500; color: #FFF; flex: 2; min-width: 200px;">
+                        {row['Zone']}
+                      </span>
+                      <span style="font-family: 'Geist Mono', monospace; color: #FFF; flex: 1; text-align: center; min-width: 120px;">
+                        {row['Allure rapide']} – {row['Allure lente']} /km
+                      </span>
+                      <span style="font-family: 'Geist Mono', monospace; color: #FFF; flex: 1; text-align: right; min-width: 120px;">
+                        {row['Vitesse (km/h)']} km/h
+                      </span>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                st.markdown("")
+            else:
+                st.warning("Format de chrono non reconnu. Exemples : 1h45, 45:30, 3h30m, 25m30")
 
         st.markdown("")
         if st.button("Générer le plan d'entraînement"):
