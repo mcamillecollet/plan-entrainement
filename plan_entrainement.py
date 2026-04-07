@@ -108,7 +108,8 @@ st.markdown("""
   [data-testid="stFileUploader"] label {
     font-family: 'Outfit', sans-serif;
     font-weight: 500;
-    font-size: 0.9rem;
+    font-size: 1.1rem;
+    letter-spacing: 0.01em;
     color: #F0F0F0;
   }
 
@@ -119,7 +120,7 @@ st.markdown("""
     overflow: hidden;
     font-family: 'Geist Mono', monospace;
     font-size: 0.8rem;
-    color: #B0B0B0;
+    color: #2E2E2E;
   }
 
   .stButton > button {
