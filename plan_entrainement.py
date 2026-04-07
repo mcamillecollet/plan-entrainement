@@ -620,4 +620,136 @@ if uploaded_file is not None:
             ax3.set_title("")
 
             for desc, mid, h, y_label in desc_labels:
-                ax3.text(mid, y_label, f"({desc['pente_p
+                ax3.text(mid, y_label, f"({desc['pente_pct']})%",
+                         ha='center', va='bottom', color=CHART_LINE_DESCENT,
+                         fontsize=8.5, fontweight='bold', zorder=6)
+
+            fig3.tight_layout()
+            st.pyplot(fig3)
+
+            st.markdown('<p class="section-label">Descentes &gt; 200 m</p>', unsafe_allow_html=True)
+            desc_df = pd.DataFrame(analyse['descentes'])
+            desc_df = desc_df[['start_km', 'end_km', 'longueur_km', 'pente_pct']]
+            desc_df = desc_df.round({'start_km': 1, 'end_km': 1, 'longueur_km': 1})
+            desc_df.index = range(1, len(desc_df) + 1)
+            desc_df.rename(columns={
+                'start_km': 'Début (km)', 'end_km': 'Fin (km)',
+                'longueur_km': 'Longueur (km)', 'pente_pct': 'Pente (%)'
+            }, inplace=True)
+            st.dataframe(desc_df, use_container_width=True, column_config={
+                'Pente (%)': st.column_config.NumberColumn(format="(%.1f) %%")
+            })
+
+        # --- Paramètres pour le plan ---
+        st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
+        st.markdown('<p class="section-label">Paramètres du plan d\'entraînement</p>', unsafe_allow_html=True)
+
+        col_a, col_b = st.columns(2)
+        with col_a:
+            niveau = st.radio("Niveau", ["Débutant", "Intermédiaire", "Avancé"], horizontal=True)
+            type_course = st.selectbox("Type de course", ["5km", "10km", "Semi-marathon", "Marathon"])
+            chrono_actuel = st.text_input("Chrono actuel (ex: 1h45)")
+            chrono_cible = st.text_input("Chrono cible (ex: 1h30)")
+        with col_b:
+            duree_semaine = st.selectbox("Durée du plan (semaines)", list(range(4, 21)), index=4)
+            sorties_par_semaine = st.selectbox("Sorties par semaine", [2, 3, 4], index=1)
+            volume_debut = st.selectbox("Volume de départ (km/semaine)", list(range(5, 21)), index=5)
+            volume_pic = st.selectbox("Volume pic (km/semaine)", list(range(15, 105, 5)), index=5)
+
+        date_course = st.date_input("Date de la course", value=None, format="DD/MM/YYYY")
+
+        # --- Estimation VDOT et allures ---
+        if chrono_actuel:
+            distances_map = {"5km": 5, "10km": 10, "Semi-marathon": 21.0975, "Marathon": 42.195}
+            temps = parse_chrono(chrono_actuel)
+            if temps:
+                dist_km = distances_map[type_course]
+                vdot = estimer_vdot(dist_km, temps)
+
+                st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
+                st.markdown('<p class="section-label">Estimation du niveau & allures d\'entraînement</p>', unsafe_allow_html=True)
+
+                # Afficher VDOT
+                vitesse_kmh = round(dist_km / (temps / 60), 1)
+                allure_moy = format_pace(temps / dist_km)
+                st.markdown(f"""
+                <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                  <div class="stat-card" style="flex: 1; min-width: 150px;">
+                    <span class="stat-label">VDOT estimé</span>
+                    <span class="stat-value">{vdot}</span>
+                  </div>
+                  <div class="stat-card" style="flex: 1; min-width: 150px;">
+                    <span class="stat-label">Vitesse moyenne</span>
+                    <span class="stat-value">{vitesse_kmh} <span class="stat-unit">km/h</span></span>
+                  </div>
+                  <div class="stat-card" style="flex: 1; min-width: 150px;">
+                    <span class="stat-label">Allure moyenne</span>
+                    <span class="stat-value">{allure_moy} <span class="stat-unit">/km</span></span>
+                  </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+                # Tableau des allures
+                allures = allures_from_vdot(vdot)
+                allures_data = []
+                for nom, (pace_fast, pace_slow) in allures.items():
+                    vitesse_fast = round(60 / pace_fast, 1) if pace_fast else None
+                    vitesse_slow = round(60 / pace_slow, 1) if pace_slow else None
+                    allures_data.append({
+                        'Zone': nom,
+                        'Allure rapide': format_pace(pace_fast),
+                        'Allure lente': format_pace(pace_slow),
+                        'Vitesse (km/h)': f"{vitesse_slow} – {vitesse_fast}" if vitesse_slow and vitesse_fast else "—"
+                    })
+
+                st.markdown('<p class="section-label">Zones d\'allure</p>', unsafe_allow_html=True)
+
+                # Affichage en cards
+                for row in allures_data:
+                    st.markdown(f"""
+                    <div style="background: #B0B0B0; border: 1px solid #999; border-radius: 8px;
+                                padding: 0.8rem 1.2rem; margin-bottom: 0.5rem;
+                                display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                      <span style="font-family: 'Outfit', sans-serif; font-weight: 500; color: #FFF; flex: 2; min-width: 200px;">
+                        {row['Zone']}
+                      </span>
+                      <span style="font-family: 'Geist Mono', monospace; color: #FFF; flex: 1; text-align: center; min-width: 120px;">
+                        {row['Allure rapide']} – {row['Allure lente']} /km
+                      </span>
+                      <span style="font-family: 'Geist Mono', monospace; color: #FFF; flex: 1; text-align: right; min-width: 120px;">
+                        {row['Vitesse (km/h)']} km/h
+                      </span>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                st.markdown("")
+            else:
+                st.warning("Format de chrono non reconnu. Exemples : 1h45, 45:30, 3h30m, 25m30")
+
+        st.markdown("")
+        if st.button("Générer le plan d'entraînement"):
+            plan_df = generer_plan_personnalise(
+                niveau, type_course, volume_debut, volume_pic,
+                duree_semaine, sorties_par_semaine, analyse['D_plus_m']
+            )
+
+            st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
+            st.markdown('<p class="section-label">Plan d\'entraînement personnalisé</p>', unsafe_allow_html=True)
+            st.dataframe(plan_df, use_container_width=True)
+
+            st.markdown('<p class="section-label">Volume hebdomadaire</p>', unsafe_allow_html=True)
+            fig2, ax2 = plt.subplots(figsize=(11, 3.5))
+            style_ax(ax2, fig2)
+            ax2.plot(plan_df['Semaine'], plan_df['Volume total (km)'],
+                     color=CHART_LINE_ASCENT, linewidth=2, marker='o',
+                     markersize=5, markerfacecolor='white', markeredgewidth=1.5)
+            ax2.fill_between(plan_df['Semaine'], plan_df['Volume total (km)'],
+                             alpha=0.06, color=CHART_LINE_ASCENT)
+            ax2.set_xlabel("Semaine", fontsize=10)
+            ax2.set_ylabel("Volume (km)", fontsize=10)
+            ax2.xaxis.set_major_locator(MultipleLocator(1))
+            fig2.tight_layout()
+            st.pyplot(fig2)
+
+    else:
+        st.error("Impossible d'analyser le fichier GPX.")
