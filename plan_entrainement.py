@@ -113,9 +113,21 @@ st.markdown("""
     color: #F0F0F0;
   }
 
+  [data-testid="stFileUploader"] section {
+    background: #B0B0B0 !important;
+    border: 1px solid #999999 !important;
+    border-radius: 6px;
+    padding: 0.5rem;
+  }
+
+  [data-testid="stFileUploader"] section button {
+    background: #B0B0B0 !important;
+    color: #FFFFFF !important;
+  }
+
   [data-testid="stDataFrame"] {
-    background: #E8E8E8;
-    border: 1px solid #CCCCCC;
+    background: #2E2E2E;
+    border: none;
     border-radius: 8px;
     overflow: hidden;
     font-family: 'Geist Mono', monospace;
@@ -126,7 +138,7 @@ st.markdown("""
   [data-testid="stDataFrame"] [data-testid="stDataFrameResizable"],
   [data-testid="stDataFrame"] .stDataFrame,
   [data-testid="stDataFrame"] iframe {
-    background: #E8E8E8 !important;
+    background: #2E2E2E !important;
   }
 
   [data-testid="stDataFrame"] th,
@@ -463,6 +475,7 @@ if uploaded_file is not None:
             cotes_df = pd.DataFrame(analyse['cotes'])
             cotes_df = cotes_df[['start_km', 'end_km', 'longueur_km', 'pente_pct']]
             cotes_df = cotes_df.round({'start_km': 1, 'end_km': 1, 'longueur_km': 1})
+            cotes_df.index = range(1, len(cotes_df) + 1)
             cotes_df.rename(columns={
                 'start_km': 'Début (km)', 'end_km': 'Fin (km)',
                 'longueur_km': 'Longueur (km)', 'pente_pct': 'Pente (%)'
@@ -529,6 +542,7 @@ if uploaded_file is not None:
             desc_df = pd.DataFrame(analyse['descentes'])
             desc_df = desc_df[['start_km', 'end_km', 'longueur_km', 'pente_pct']]
             desc_df = desc_df.round({'start_km': 1, 'end_km': 1, 'longueur_km': 1})
+            desc_df.index = range(1, len(desc_df) + 1)
             desc_df.rename(columns={
                 'start_km': 'Début (km)', 'end_km': 'Fin (km)',
                 'longueur_km': 'Longueur (km)', 'pente_pct': 'Pente (%)'
