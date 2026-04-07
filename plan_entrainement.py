@@ -21,14 +21,16 @@ st.markdown("""
   @import url('<https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap>');
 
   html, body, [data-testid="stAppViewContainer"] {
-    background-color: #F7F6F3;
+    background-color: #2E2E2E;
     font-family: 'Outfit', sans-serif;
+    color: #E0E0E0;
   }
 
   [data-testid="stAppViewContainer"] > .main {
     padding: 2.5rem 3rem 4rem 3rem;
     max-width: 1100px;
     margin: 0 auto;
+    background-color: #2E2E2E;
   }
 
   h1 {
@@ -36,7 +38,7 @@ st.markdown("""
     font-weight: 600;
     font-size: 1.75rem;
     letter-spacing: -0.03em;
-    color: #111;
+    color: #F0F0F0;
     margin-bottom: 0.25rem;
   }
 
@@ -44,12 +46,12 @@ st.markdown("""
     font-family: 'Outfit', sans-serif;
     font-weight: 500;
     letter-spacing: -0.02em;
-    color: #222;
+    color: #E0E0E0;
   }
 
   .stat-card {
-    background: #FFFFFF;
-    border: 1px solid #E8E6E1;
+    background: #3A3A3A;
+    border: 1px solid #4A4A4A;
     border-radius: 8px;
     padding: 1.2rem 1.4rem;
     display: flex;
@@ -63,26 +65,26 @@ st.markdown("""
     font-weight: 500;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #888;
+    color: #AAA;
   }
 
   .stat-value {
     font-family: 'Outfit', sans-serif;
     font-size: 1.6rem;
     font-weight: 600;
-    color: #111;
+    color: #F0F0F0;
     letter-spacing: -0.03em;
   }
 
   .stat-unit {
     font-family: 'Geist Mono', monospace;
     font-size: 0.75rem;
-    color: #999;
+    color: #AAA;
   }
 
   .section-divider {
     border: none;
-    border-top: 1px solid #E8E6E1;
+    border-top: 1px solid #4A4A4A;
     margin: 2rem 0;
   }
 
@@ -92,19 +94,19 @@ st.markdown("""
     font-weight: 500;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: #999;
+    color: #AAA;
     margin-bottom: 1rem;
   }
 
   [data-testid="stFileUploader"] {
-    background: #FFFFFF;
-    border: 1px solid #E8E6E1;
+    background: #3A3A3A;
+    border: 1px solid #4A4A4A;
     border-radius: 8px;
     padding: 0.5rem;
   }
 
   [data-testid="stDataFrame"] {
-    border: 1px solid #E8E6E1;
+    border: 1px solid #4A4A4A;
     border-radius: 8px;
     overflow: hidden;
     font-family: 'Geist Mono', monospace;
@@ -112,8 +114,8 @@ st.markdown("""
   }
 
   .stButton > button {
-    background: #111;
-    color: #F7F6F3;
+    background: #555;
+    color: #F0F0F0;
     border: none;
     border-radius: 6px;
     font-family: 'Outfit', sans-serif;
@@ -126,7 +128,7 @@ st.markdown("""
   }
 
   .stButton > button:hover {
-    background: #333;
+    background: #666;
   }
 
   [data-testid="stRadio"] label,
@@ -138,12 +140,12 @@ st.markdown("""
     font-weight: 500;
     letter-spacing: 0.07em;
     text-transform: uppercase;
-    color: #888;
+    color: #AAA;
   }
 
   [data-testid="stAlert"] {
     border-radius: 8px;
-    border: 1px solid #E8E6E1;
+    border: 1px solid #4A4A4A;
     font-family: 'Outfit', sans-serif;
   }
 </style>
@@ -312,26 +314,26 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
 
 
 # --- Style partagé pour les graphiques matplotlib ---
-CHART_BG = "#F7F6F3"
-CHART_LINE_ASCENT = "#1A1A1A"
+CHART_BG = "#2E2E2E"
+CHART_LINE_ASCENT = "#000000"
 CHART_LINE_DESCENT = "#4A6FA5"
-CHART_FILL_ASCENT = "#1A1A1A"
+CHART_FILL_ASCENT = "#000000"
 CHART_FILL_DESCENT = "#4A6FA5"
-CHART_HIGHLIGHT = "#C94040"
+CHART_HIGHLIGHT = "#722F37"
 
 
 def style_ax(ax, fig):
     ax.set_facecolor(CHART_BG)
     fig.patch.set_facecolor(CHART_BG)
-    ax.grid(True, color='#C8C5BE', linestyle='-', linewidth=0.5, alpha=0.6)
+    ax.grid(True, color='#555', linestyle='-', linewidth=0.5, alpha=0.6)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_color('#C8C5BE')
-    ax.spines['bottom'].set_color('#C8C5BE')
-    ax.tick_params(colors='#888', labelsize=9)
-    ax.xaxis.label.set_color('#555')
-    ax.yaxis.label.set_color('#555')
-    ax.title.set_color('#111')
+    ax.spines['left'].set_color('#555')
+    ax.spines['bottom'].set_color('#555')
+    ax.tick_params(colors='#AAA', labelsize=9)
+    ax.xaxis.label.set_color('#CCC')
+    ax.yaxis.label.set_color('#CCC')
+    ax.title.set_color('#F0F0F0')
 
 
 # --- Header ---
@@ -479,7 +481,7 @@ if uploaded_file is not None:
             ax3.set_title("")
 
             for desc, mid, h, y_label in desc_labels:
-                ax3.text(mid, y_label, f"({desc['pente_pct']}) %",
+                ax3.text(mid, y_label, f"({desc['pente_pct']}%)",
                          ha='center', va='bottom', color=CHART_LINE_DESCENT,
                          fontsize=8.5, fontweight='bold', zorder=6)
 
