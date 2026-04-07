@@ -113,6 +113,18 @@ st.markdown("""
     color: #F0F0F0;
   }
 
+  [data-testid="stFileUploader"] section {
+    background: #B0B0B0 !important;
+    border: 1px solid #999999 !important;
+    border-radius: 6px;
+    padding: 0.5rem;
+  }
+
+  [data-testid="stFileUploader"] section button {
+    background: #B0B0B0 !important;
+    color: #FFFFFF !important;
+  }
+
   [data-testid="stDataFrame"] {
     background: #2E2E2E;
     border: none;
