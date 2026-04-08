@@ -722,72 +722,96 @@ if uploaded_file is not None:
         date_course = st.date_input("Date de la course", value=None, format="DD/MM/YYYY")
 
         # --- Estimation VDOT et allures ---
-        if chrono_actuel:
+        if chrono_actuel or chrono_cible:
             distances_map = {"5km": 5, "10km": 10, "Semi-marathon": 21.0975, "Marathon": 42.195}
-            temps = parse_chrono(chrono_actuel)
-            if temps:
-                dist_km = distances_map[type_course]
-                vdot = estimer_vdot(dist_km, temps)
+            dist_km = distances_map[type_course]
 
+            temps_actuel = parse_chrono(chrono_actuel) if chrono_actuel else None
+            temps_cible = parse_chrono(chrono_cible) if chrono_cible else None
+
+            if chrono_actuel and not temps_actuel:
+                st.warning("Format du chrono actuel non reconnu. Exemples : 1h45, 45:30, 3h30m, 25m30")
+            if chrono_cible and not temps_cible:
+                st.warning("Format du chrono cible non reconnu. Exemples : 1h45, 45:30, 3h30m, 25m30")
+
+            if temps_actuel or temps_cible:
                 st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
                 st.markdown('<p class="section-label">Estimation du niveau & allures d\'entraînement</p>', unsafe_allow_html=True)
 
-                # Afficher VDOT
-                vitesse_kmh = round(dist_km / (temps / 60), 1)
-                allure_moy = format_pace(temps / dist_km)
-                st.markdown(f"""
-                <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
-                  <div class="stat-card" style="flex: 1; min-width: 150px;">
-                    <span class="stat-label">VDOT estimé</span>
-                    <span class="stat-value">{vdot}</span>
-                  </div>
-                  <div class="stat-card" style="flex: 1; min-width: 150px;">
-                    <span class="stat-label">Vitesse moyenne</span>
-                    <span class="stat-value">{vitesse_kmh} <span class="stat-unit">km/h</span></span>
-                  </div>
-                  <div class="stat-card" style="flex: 1; min-width: 150px;">
-                    <span class="stat-label">Allure moyenne</span>
-                    <span class="stat-value">{allure_moy} <span class="stat-unit">/km</span></span>
-                  </div>
-                </div>
-                """, unsafe_allow_html=True)
+                # Préparer les données pour chaque chrono disponible
+                sections = []
+                if temps_actuel:
+                    vdot_actuel = estimer_vdot(dist_km, temps_actuel)
+                    sections.append(("Niveau actuel", temps_actuel, vdot_actuel, "#B0B0B0"))
+                if temps_cible:
+                    vdot_cible = estimer_vdot(dist_km, temps_cible)
+                    sections.append(("Niveau cible", temps_cible, vdot_cible, "#E8804F"))
 
-                # Tableau des allures
-                allures = allures_from_vdot(vdot)
-                allures_data = []
-                for nom, (pace_fast, pace_slow) in allures.items():
-                    vitesse_fast = round(60 / pace_fast, 1) if pace_fast else None
-                    vitesse_slow = round(60 / pace_slow, 1) if pace_slow else None
-                    allures_data.append({
-                        'Zone': nom,
-                        'Allure rapide': format_pace(pace_fast),
-                        'Allure lente': format_pace(pace_slow),
-                        'Vitesse (km/h)': f"{vitesse_slow} – {vitesse_fast}" if vitesse_slow and vitesse_fast else "—"
-                    })
+                # Afficher les colonnes VDOT côte à côte si les deux sont présents
+                if temps_actuel and temps_cible:
+                    col_actuel, col_cible = st.columns(2)
+                    cols = [col_actuel, col_cible]
+                else:
+                    cols = [st.container()]
 
-                st.markdown('<p class="section-label">Zones d\'allure</p>', unsafe_allow_html=True)
+                for idx, (label, temps, vdot, color) in enumerate(sections):
+                    with cols[idx]:
+                        vitesse_kmh = round(dist_km / (temps / 60), 1)
+                        allure_moy = format_pace(temps / dist_km)
+                        st.markdown(f"""
+                        <p style="font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 1.05rem;
+                                  color: {color}; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                          {label}
+                        </p>
+                        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                          <div class="stat-card" style="flex: 1; min-width: 120px;">
+                            <span class="stat-label">VDOT estimé</span>
+                            <span class="stat-value">{vdot}</span>
+                          </div>
+                          <div class="stat-card" style="flex: 1; min-width: 120px;">
+                            <span class="stat-label">Vitesse moy.</span>
+                            <span class="stat-value">{vitesse_kmh} <span class="stat-unit">km/h</span></span>
+                          </div>
+                          <div class="stat-card" style="flex: 1; min-width: 120px;">
+                            <span class="stat-label">Allure moy.</span>
+                            <span class="stat-value">{allure_moy} <span class="stat-unit">/km</span></span>
+                          </div>
+                        </div>
+                        """, unsafe_allow_html=True)
 
-                # Affichage en cards
-                for row in allures_data:
-                    st.markdown(f"""
-                    <div style="background: #B0B0B0; border: 1px solid #999; border-radius: 8px;
-                                padding: 0.8rem 1.2rem; margin-bottom: 0.5rem;
-                                display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
-                      <span style="font-family: 'Outfit', sans-serif; font-weight: 500; color: #FFF; flex: 2; min-width: 200px;">
-                        {row['Zone']}
-                      </span>
-                      <span style="font-family: 'Geist Mono', monospace; color: #FFF; flex: 1; text-align: center; min-width: 120px;">
-                        {row['Allure rapide']} – {row['Allure lente']} /km
-                      </span>
-                      <span style="font-family: 'Geist Mono', monospace; color: #FFF; flex: 1; text-align: right; min-width: 120px;">
-                        {row['Vitesse (km/h)']} km/h
-                      </span>
-                    </div>
-                    """, unsafe_allow_html=True)
+                # Zones d'allure côte à côte
+                if temps_actuel and temps_cible:
+                    col_z1, col_z2 = st.columns(2)
+                    cols_zones = [col_z1, col_z2]
+                else:
+                    cols_zones = [st.container()]
+
+                for idx, (label, temps, vdot, color) in enumerate(sections):
+                    with cols_zones[idx]:
+                        allures = allures_from_vdot(vdot)
+                        st.markdown(f'<p class="section-label">Zones d\'allure – {label}</p>', unsafe_allow_html=True)
+
+                        for nom, (pace_fast, pace_slow) in allures.items():
+                            vitesse_fast = round(60 / pace_fast, 1) if pace_fast else None
+                            vitesse_slow = round(60 / pace_slow, 1) if pace_slow else None
+                            vitesse_str = f"{vitesse_slow} – {vitesse_fast}" if vitesse_slow and vitesse_fast else "—"
+                            st.markdown(f"""
+                            <div style="background: {color}; border: 1px solid #999; border-radius: 8px;
+                                        padding: 0.8rem 1.2rem; margin-bottom: 0.5rem;
+                                        display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                              <span style="font-family: 'Outfit', sans-serif; font-weight: 500; color: #FFF; flex: 2; min-width: 200px;">
+                                {nom}
+                              </span>
+                              <span style="font-family: 'Geist Mono', monospace; color: #FFF; flex: 1; text-align: center; min-width: 120px;">
+                                {format_pace(pace_fast)} – {format_pace(pace_slow)} /km
+                              </span>
+                              <span style="font-family: 'Geist Mono', monospace; color: #FFF; flex: 1; text-align: right; min-width: 120px;">
+                                {vitesse_str} km/h
+                              </span>
+                            </div>
+                            """, unsafe_allow_html=True)
 
                 st.markdown("")
-            else:
-                st.warning("Format de chrono non reconnu. Exemples : 1h45, 45:30, 3h30m, 25m30")
 
         st.markdown("")
         if st.button("Générer le plan d'entraînement"):
