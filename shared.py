@@ -482,8 +482,15 @@ def format_pace(pace_min_per_km):
 def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, duree_semaine, sorties_par_semaine, D_plus):
     plan = []
 
-    semaines_taper = 2 if duree_semaine >= 10 else 1
-    semaines_build = duree_semaine - semaines_taper
+    # Redescente + dernière semaine = course (taper)
+    # >= 8 sem : 2 redescente (5k/10k) ou 3 redescente (semi/marathon)
+    # < 8 sem : 1 redescente
+    course_longue = type_course in ('Semi-marathon', 'Marathon')
+    if duree_semaine >= 8:
+        semaines_redescente = 3 if course_longue else 2
+    else:
+        semaines_redescente = 1
+    semaines_build = duree_semaine - semaines_redescente - 1  # -1 pour la semaine course
 
     # Déterminer les semaines allégées selon la durée du plan
     semaines_allegees = set()
@@ -514,6 +521,7 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
 
     for semaine in range(1, duree_semaine + 1):
         if semaine <= semaines_build:
+            # Phase de préparation
             if semaine in semaines_allegees:
                 volume_total = current_volume * 0.70
             else:
@@ -521,17 +529,26 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
                     current_volume = min(current_volume * (1 + rate), volume_pic)
                 volume_total = current_volume
                 prog_count += 1
-        else:
-            taper_step = semaine - semaines_build
-            if semaines_taper == 2:
-                coef = 0.65 if taper_step == 1 else 0.50
+        elif semaine < duree_semaine:
+            # Phase de redescente (avant la semaine course)
+            step = semaine - semaines_build
+            if semaines_redescente == 3:
+                coef = {1: 0.75, 2: 0.60, 3: 0.45}[step]
+            elif semaines_redescente == 2:
+                coef = 0.70 if step == 1 else 0.50
             else:
-                coef = 0.55
+                coef = 0.60
             volume_total = volume_pic * coef
+        else:
+            # Dernière semaine = semaine de course (taper)
+            volume_total = volume_pic * 0.35
 
-        sem_type = ('Allégée' if (semaine <= semaines_build and semaine in semaines_allegees)
-                    else 'Taper' if semaine > semaines_build
-                    else 'Progression')
+        if semaine <= semaines_build:
+            sem_type = 'Allégée' if semaine in semaines_allegees else 'Progression'
+        elif semaine < duree_semaine:
+            sem_type = 'Redescente'
+        else:
+            sem_type = 'Course'
 
         is_long_run = (semaine % 2 == 1)
 
