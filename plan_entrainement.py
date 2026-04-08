@@ -224,7 +224,8 @@ st.markdown("""
 
   [data-testid="stSelectbox"] div[data-baseweb="select"]:focus-within {
     border-color: #D04D46 !important;
-    box-shadow: 0 0 0 1px #D04D46 !important;
+    box-shadow: none !important;
+    outline: none !important;
   }
 
   /* Date picker popover: month/year text, arrows, and selection in anthracite */
