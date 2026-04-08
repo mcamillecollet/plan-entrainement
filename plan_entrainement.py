@@ -514,6 +514,10 @@ def format_pace(pace_min_per_km):
     return f"{minutes}'{seconds:02d}\""
 
 
+# --- Couleurs de l'application ---
+COLOR_PRIMARY = "#B0B0B0"
+COLOR_SECONDARY = "#4A90D9"
+
 # --- Style partagé pour les graphiques matplotlib ---
 CHART_BG = "#E8E8E8"
 CHART_LINE_ASCENT = "#722F37"
@@ -742,10 +746,10 @@ if uploaded_file is not None:
                 sections = []
                 if temps_actuel:
                     vdot_actuel = estimer_vdot(dist_km, temps_actuel)
-                    sections.append(("Niveau actuel", temps_actuel, vdot_actuel, "#B0B0B0"))
+                    sections.append(("Niveau actuel", temps_actuel, vdot_actuel, COLOR_PRIMARY))
                 if temps_cible:
                     vdot_cible = estimer_vdot(dist_km, temps_cible)
-                    sections.append(("Niveau cible", temps_cible, vdot_cible, "#E8804F"))
+                    sections.append(("Niveau cible", temps_cible, vdot_cible, COLOR_SECONDARY))
 
                 # Afficher les colonnes VDOT côte à côte si les deux sont présents
                 if temps_actuel and temps_cible:
