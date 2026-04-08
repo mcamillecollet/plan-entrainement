@@ -508,11 +508,11 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
     # Le build plafonne à 90% du pic, seule la semaine Pic atteint 100%
     volume_build_max = volume_pic * 0.90
 
+    # Progression linéaire : incrément fixe pour atteindre build_max
     if nb_prog > 1 and volume_build_max > volume_debut:
-        rate = (volume_build_max / volume_debut) ** (1 / (nb_prog - 1)) - 1
-        rate = max(0.02, min(0.10, rate))
+        increment = (volume_build_max - volume_debut) / (nb_prog - 1)
     else:
-        rate = 0.07
+        increment = 0
 
     current_volume = volume_debut
     prog_count = 0
@@ -523,8 +523,7 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
             if semaine in semaines_allegees:
                 volume_total = current_volume * 0.70
             else:
-                if prog_count > 0:
-                    current_volume = min(current_volume * (1 + rate), volume_build_max)
+                current_volume = min(volume_debut + prog_count * increment, volume_build_max)
                 volume_total = current_volume
                 prog_count += 1
         elif semaine == semaine_pic:
