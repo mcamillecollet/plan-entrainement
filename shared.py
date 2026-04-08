@@ -496,20 +496,17 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
     semaines_build = duree_semaine - semaines_redescente - 1  # -1 pour la semaine course
 
     # Déterminer les semaines allégées selon la durée du plan
+    # < 10 sem : aucune
+    # 10-14 sem : 1 allégée au milieu de la phase build
+    # > 14 sem : 2 allégées à intervalle régulier dans la phase build
     semaines_allegees = set()
-    if duree_semaine >= 14:
-        # Plus de 14 semaines : 1 allégée toutes les 3 semaines
-        for s in range(1, semaines_build + 1):
-            if s % 3 == 0:
-                semaines_allegees.add(s)
-    elif duree_semaine >= 11:
-        # 11-13 semaines (arrondi à ~12) : 2 allégées (semaines 4 et 8)
-        semaines_allegees = {4, 8}
-    elif duree_semaine >= 8:
-        # 8-10 semaines : 1 allégée au milieu de la phase build
+    if duree_semaine > 14:
+        tiers = semaines_build // 3
+        semaines_allegees = {tiers, 2 * tiers}
+    elif duree_semaine >= 10:
         milieu = semaines_build // 2
         semaines_allegees = {milieu}
-    # Moins de 8 semaines : aucune allégée
+    # Moins de 10 semaines : aucune allégée
 
     nb_prog = sum(1 for s in range(1, semaines_build + 1) if s not in semaines_allegees)
 
