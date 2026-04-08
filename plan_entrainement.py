@@ -597,43 +597,35 @@ if uploaded_file is not None:
 
         total_dist = df['cum_distance'].iloc[-1]
         fig_w, fig_h = 11, 3.5
-        label_offset = data_range * 0.05
+        label_offset = data_range * 0.08
         min_gap_x = total_dist * 0.07
         min_gap_y = data_range * 0.10
 
         cote_labels = []
         for cote in analyse['cotes']:
             mid = (cote['start_km'] + cote['end_km']) / 2
-            idx_mid = df['cum_distance'].sub(mid).abs().idxmin()
-            mid_elev = df.loc[idx_mid, 'elevation']
             mask = (df['cum_distance'] >= cote['start_km']) & (df['cum_distance'] <= cote['end_km'])
-            seg = df[mask]
-            if len(seg) >= 2:
-                dx = seg['cum_distance'].iloc[-1] - seg['cum_distance'].iloc[0]
-                dy = seg['elevation'].iloc[-1] - seg['elevation'].iloc[0]
-                angle = np.degrees(np.arctan2(dy * (fig_h / data_range), dx * (fig_w / total_dist)))
-            else:
-                angle = 0
-            y_label = mid_elev + label_offset
-            cote_labels.append((cote, mid, y_label, angle))
+            max_elev = df.loc[mask, 'elevation'].max()
+            y_label = max_elev + label_offset
+            cote_labels.append((cote, mid, y_label))
 
         # Anti-chevauchement
         for i in range(1, len(cote_labels)):
-            cote_i, x_i, y_i, a_i = cote_labels[i]
+            cote_i, x_i, y_i = cote_labels[i]
             for j in range(i):
-                _, x_j, y_j, _ = cote_labels[j]
+                _, x_j, y_j = cote_labels[j]
                 if abs(x_i - x_j) < min_gap_x and abs(y_i - y_j) < min_gap_y:
                     y_i = y_j + min_gap_y
-                    cote_labels[i] = (cote_i, x_i, y_i, a_i)
+                    cote_labels[i] = (cote_i, x_i, y_i)
 
-        max_y_label = max((y for _, _, y, _ in cote_labels), default=y_max_data)
+        max_y_label = max((y for _, _, y in cote_labels), default=y_max_data)
         y_top = max_y_label + data_range * 0.15
         y_bottom = y_min_data - data_range * 0.05
         ax.set_ylim(y_bottom, y_top)
 
         ax.fill_between(df['cum_distance'], df['elevation'], y_bottom, color=CHART_FILL_ASCENT, alpha=0.06)
 
-        for cote, mid, y_label, angle in cote_labels:
+        for cote, mid, y_label in cote_labels:
             mask = (df['cum_distance'] >= cote['start_km']) & (df['cum_distance'] <= cote['end_km'])
             df_section = df[mask]
             if not df_section.empty:
@@ -647,7 +639,7 @@ if uploaded_file is not None:
         ax.set_ylabel("Altitude (m)", fontsize=10)
         ax.set_title("")
 
-        for cote, mid, y_label, angle in cote_labels:
+        for cote, mid, y_label in cote_labels:
             ax.text(mid, y_label, f"{cote['pente_pct']}%",
                     ha='center', va='bottom', color=CHART_HIGHLIGHT,
                     fontsize=8.5, fontweight='bold', zorder=6)
@@ -681,43 +673,35 @@ if uploaded_file is not None:
             data_range_d = y_max_d - y_min_d if y_max_d != y_min_d else 100
 
             total_dist_d = df['cum_distance'].iloc[-1]
-            label_offset_d = data_range_d * 0.05
+            label_offset_d = data_range_d * 0.08
             min_gap_x_d = total_dist_d * 0.07
             min_gap_y_d = data_range_d * 0.10
 
             desc_labels = []
             for desc in analyse['descentes']:
                 mid = (desc['start_km'] + desc['end_km']) / 2
-                idx_mid = df['cum_distance'].sub(mid).abs().idxmin()
-                mid_elev = df.loc[idx_mid, 'elevation']
                 mask = (df['cum_distance'] >= desc['start_km']) & (df['cum_distance'] <= desc['end_km'])
-                seg = df[mask]
-                if len(seg) >= 2:
-                    dx = seg['cum_distance'].iloc[-1] - seg['cum_distance'].iloc[0]
-                    dy = seg['elevation'].iloc[-1] - seg['elevation'].iloc[0]
-                    angle = np.degrees(np.arctan2(dy * (fig_h / data_range_d), dx * (fig_w / total_dist_d)))
-                else:
-                    angle = 0
-                y_label = mid_elev + label_offset_d
-                desc_labels.append((desc, mid, y_label, angle))
+                max_elev = df.loc[mask, 'elevation'].max()
+                y_label = max_elev + label_offset_d
+                desc_labels.append((desc, mid, y_label))
 
             # Anti-chevauchement
             for i in range(1, len(desc_labels)):
-                desc_i, x_i, y_i, a_i = desc_labels[i]
+                desc_i, x_i, y_i = desc_labels[i]
                 for j in range(i):
-                    _, x_j, y_j, _ = desc_labels[j]
+                    _, x_j, y_j = desc_labels[j]
                     if abs(x_i - x_j) < min_gap_x_d and abs(y_i - y_j) < min_gap_y_d:
                         y_i = y_j + min_gap_y_d
-                        desc_labels[i] = (desc_i, x_i, y_i, a_i)
+                        desc_labels[i] = (desc_i, x_i, y_i)
 
-            max_y_label_d = max((y for _, _, y, _ in desc_labels), default=y_max_d)
+            max_y_label_d = max((y for _, _, y in desc_labels), default=y_max_d)
             y_top_d = max_y_label_d + data_range_d * 0.15
             y_bottom_d = y_min_d - data_range_d * 0.05
             ax3.set_ylim(y_bottom_d, y_top_d)
 
             ax3.fill_between(df['cum_distance'], df['elevation'], y_bottom_d, color=CHART_FILL_DESCENT, alpha=0.06)
 
-            for desc, mid, y_label, angle in desc_labels:
+            for desc, mid, y_label in desc_labels:
                 mask = (df['cum_distance'] >= desc['start_km']) & (df['cum_distance'] <= desc['end_km'])
                 df_section = df[mask]
                 if not df_section.empty:
@@ -731,7 +715,7 @@ if uploaded_file is not None:
             ax3.set_ylabel("Altitude (m)", fontsize=10)
             ax3.set_title("")
 
-            for desc, mid, y_label, angle in desc_labels:
+            for desc, mid, y_label in desc_labels:
                 ax3.text(mid, y_label, f"({desc['pente_pct']})%",
                          ha='center', va='bottom', color=CHART_LINE_DESCENT,
                          fontsize=8.5, fontweight='bold', zorder=6)
