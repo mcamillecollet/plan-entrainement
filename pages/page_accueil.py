@@ -24,150 +24,206 @@ def render():
 </div>
 """, unsafe_allow_html=True)
 
-    # Animation du coureur via st.components.v1.html (supporte le SVG)
+    # Animation de deux coureurs style icon (traits épais arrondis)
     runner_html = """
 <!DOCTYPE html>
 <html>
 <head>
 <style>
-  * { margin: 0; padding: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     background: transparent;
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100%;
+    height: 100%;
     overflow: hidden;
+    padding-top: 40px;
   }
 
-  .runner-bounce {
-    animation: bounce 0.35s ease-in-out infinite;
+  /* --- Bounce global des coureurs --- */
+  .runner-front {
+    animation: bounce-front 0.6s ease-in-out infinite;
   }
-  @keyframes bounce {
+  .runner-back {
+    animation: bounce-back 0.6s ease-in-out infinite;
+    animation-delay: 0.3s;
+  }
+  @keyframes bounce-front {
     0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-7px); }
+    50%      { transform: translateY(-5px); }
+  }
+  @keyframes bounce-back {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-5px); }
   }
 
-  .arm-l, .arm-r, .leg-l, .leg-r {
+  /* --- Bras et jambes animés --- */
+  .f-arm-l, .f-arm-r, .f-leg-l, .f-leg-r,
+  .b-arm-l, .b-arm-r, .b-leg-l, .b-leg-r {
     transform-box: fill-box;
     transform-origin: top center;
   }
 
-  .arm-l  { animation: swing-arm-l 0.7s ease-in-out infinite; }
-  .arm-r  { animation: swing-arm-r 0.7s ease-in-out infinite; }
-  .leg-l  { animation: swing-leg-l 0.7s ease-in-out infinite; }
-  .leg-r  { animation: swing-leg-r 0.7s ease-in-out infinite; }
+  /* Coureur de devant */
+  .f-arm-l  { animation: f-swing-arm-l 0.6s ease-in-out infinite; }
+  .f-arm-r  { animation: f-swing-arm-r 0.6s ease-in-out infinite; }
+  .f-leg-l  { animation: f-swing-leg-l 0.6s ease-in-out infinite; }
+  .f-leg-r  { animation: f-swing-leg-r 0.6s ease-in-out infinite; }
 
-  @keyframes swing-arm-l {
+  @keyframes f-swing-arm-l {
+    0%, 100% { transform: rotate(-40deg); }
+    50%      { transform: rotate(40deg); }
+  }
+  @keyframes f-swing-arm-r {
+    0%, 100% { transform: rotate(40deg); }
+    50%      { transform: rotate(-40deg); }
+  }
+  @keyframes f-swing-leg-l {
+    0%, 100% { transform: rotate(30deg); }
+    50%      { transform: rotate(-30deg); }
+  }
+  @keyframes f-swing-leg-r {
+    0%, 100% { transform: rotate(-30deg); }
+    50%      { transform: rotate(30deg); }
+  }
+
+  /* Coureur de derrière (décalé) */
+  .b-arm-l  { animation: b-swing-arm-l 0.6s ease-in-out infinite 0.3s; }
+  .b-arm-r  { animation: b-swing-arm-r 0.6s ease-in-out infinite 0.3s; }
+  .b-leg-l  { animation: b-swing-leg-l 0.6s ease-in-out infinite 0.3s; }
+  .b-leg-r  { animation: b-swing-leg-r 0.6s ease-in-out infinite 0.3s; }
+
+  @keyframes b-swing-arm-l {
     0%, 100% { transform: rotate(-35deg); }
     50%      { transform: rotate(35deg); }
   }
-  @keyframes swing-arm-r {
+  @keyframes b-swing-arm-r {
     0%, 100% { transform: rotate(35deg); }
     50%      { transform: rotate(-35deg); }
   }
-  @keyframes swing-leg-l {
+  @keyframes b-swing-leg-l {
     0%, 100% { transform: rotate(28deg); }
     50%      { transform: rotate(-28deg); }
   }
-  @keyframes swing-leg-r {
+  @keyframes b-swing-leg-r {
     0%, 100% { transform: rotate(-28deg); }
     50%      { transform: rotate(28deg); }
   }
 
-  .runner-shadow {
-    animation: shadow-pulse 0.35s ease-in-out infinite;
-  }
-  @keyframes shadow-pulse {
-    0%, 100% { opacity: 0.25; }
-    50%      { opacity: 0.10; }
-  }
-
-  .speed-line { animation: speed 0.7s ease-in-out infinite; }
-  .speed-line-1 { animation-delay: 0s; }
-  .speed-line-2 { animation-delay: 0.18s; }
-  .speed-line-3 { animation-delay: 0.36s; }
+  /* --- Lignes de vitesse --- */
+  .speed-line { animation: speed 0.8s ease-in-out infinite; }
+  .sl-1 { animation-delay: 0s; }
+  .sl-2 { animation-delay: 0.2s; }
+  .sl-3 { animation-delay: 0.4s; }
   @keyframes speed {
-    0%, 100% { opacity: 0.6; transform: translateX(0); }
-    50%      { opacity: 0.05; transform: translateX(-12px); }
-  }
-
-  .dust { animation: dust-particle 0.7s ease-out infinite; }
-  .dust-1 { animation-delay: 0s; }
-  .dust-2 { animation-delay: 0.25s; }
-  .dust-3 { animation-delay: 0.5s; }
-  @keyframes dust-particle {
-    0%   { opacity: 0.4; transform: translate(0, 0) scale(1); }
-    100% { opacity: 0; transform: translate(-18px, -8px) scale(0.3); }
+    0%, 100% { opacity: 0.7; transform: translateX(0); }
+    50%      { opacity: 0.1; transform: translateX(-10px); }
   }
 </style>
 </head>
 <body>
-  <svg viewBox="0 0 160 185" width="160" height="185" xmlns="http://www.w3.org/2000/svg">
+  <svg viewBox="0 0 280 260" width="240" height="224" xmlns="http://www.w3.org/2000/svg"
+       fill="none" stroke-linecap="round" stroke-linejoin="round">
 
-    <!-- Speed lines -->
-    <line class="speed-line speed-line-1" x1="12" y1="48" x2="32" y2="48"
-          stroke="#D04D46" stroke-width="2.2" stroke-linecap="round"/>
-    <line class="speed-line speed-line-2" x1="8"  y1="66" x2="30" y2="66"
-          stroke="#D04D46" stroke-width="1.8" stroke-linecap="round"/>
-    <line class="speed-line speed-line-3" x1="16" y1="84" x2="34" y2="84"
-          stroke="#D04D46" stroke-width="1.4" stroke-linecap="round"/>
+    <!-- ==================== -->
+    <!-- LIGNES DE VITESSE    -->
+    <!-- ==================== -->
+    <g>
+      <line class="speed-line sl-1" x1="18" y1="62" x2="48" y2="62"
+            stroke="#F0F0F0" stroke-width="7" opacity="0.7"/>
+      <line class="speed-line sl-2" x1="10" y1="82" x2="40" y2="82"
+            stroke="#F0F0F0" stroke-width="7" opacity="0.6"/>
+      <line class="speed-line sl-3" x1="22" y1="102" x2="48" y2="102"
+            stroke="#F0F0F0" stroke-width="7" opacity="0.5"/>
+    </g>
 
-    <g class="runner-bounce">
-      <!-- Head -->
-      <circle cx="82" cy="18" r="12" fill="#F0F0F0"/>
+    <!-- =============================== -->
+    <!-- COUREUR ARRIERE (plus petit)     -->
+    <!-- =============================== -->
+    <g class="runner-back">
+      <!-- Tête -->
+      <circle cx="190" cy="42" r="14" stroke="#F0F0F0" stroke-width="7" fill="none"/>
 
-      <!-- Torso -->
-      <line x1="80" y1="30" x2="74" y2="78"
-            stroke="#F0F0F0" stroke-width="5.5" stroke-linecap="round"/>
+      <!-- Corps (torse) -->
+      <polyline points="182,58 168,110"
+                stroke="#F0F0F0" stroke-width="7"/>
 
-      <!-- Left arm -->
-      <g class="arm-l">
-        <line x1="78" y1="38" x2="60" y2="62"
-              stroke="#F0F0F0" stroke-width="3.8" stroke-linecap="round"/>
-        <line x1="60" y1="62" x2="54" y2="72"
-              stroke="#CCCCCC" stroke-width="3" stroke-linecap="round"/>
+      <!-- Bras gauche (devant) -->
+      <g class="b-arm-l">
+        <polyline points="178,70 158,88 148,78"
+                  stroke="#F0F0F0" stroke-width="7"/>
       </g>
 
-      <!-- Right arm -->
-      <g class="arm-r">
-        <line x1="78" y1="38" x2="96" y2="62"
-              stroke="#F0F0F0" stroke-width="3.8" stroke-linecap="round"/>
-        <line x1="96" y1="62" x2="102" y2="72"
-              stroke="#CCCCCC" stroke-width="3" stroke-linecap="round"/>
+      <!-- Bras droit (derrière) -->
+      <g class="b-arm-r">
+        <polyline points="178,70 196,90 204,82"
+                  stroke="#F0F0F0" stroke-width="7"/>
       </g>
 
-      <!-- Left leg (thigh + calf with shoe) -->
-      <g class="leg-l">
-        <line x1="74" y1="78" x2="54" y2="118"
-              stroke="#F0F0F0" stroke-width="5" stroke-linecap="round"/>
-        <line x1="54" y1="118" x2="46" y2="148"
-              stroke="#F0F0F0" stroke-width="4.2" stroke-linecap="round"/>
-        <line x1="46" y1="148" x2="40" y2="155"
-              stroke="#D04D46" stroke-width="5" stroke-linecap="round"/>
+      <!-- Jambe gauche (devant) -->
+      <g class="b-leg-l">
+        <polyline points="168,110 148,145 132,138"
+                  stroke="#F0F0F0" stroke-width="7"/>
       </g>
 
-      <!-- Right leg (thigh + calf with shoe) -->
-      <g class="leg-r">
-        <line x1="74" y1="78" x2="94" y2="118"
-              stroke="#F0F0F0" stroke-width="5" stroke-linecap="round"/>
-        <line x1="94" y1="118" x2="102" y2="148"
-              stroke="#F0F0F0" stroke-width="4.2" stroke-linecap="round"/>
-        <line x1="102" y1="148" x2="108" y2="155"
-              stroke="#D04D46" stroke-width="5" stroke-linecap="round"/>
+      <!-- Jambe droite (derrière) -->
+      <g class="b-leg-r">
+        <polyline points="168,110 186,148 198,142"
+                  stroke="#F0F0F0" stroke-width="7"/>
       </g>
     </g>
 
-    <!-- Ground shadow -->
-    <ellipse class="runner-shadow" cx="76" cy="172" rx="24" ry="4" fill="#D04D46" opacity="0.25"/>
+    <!-- =============================== -->
+    <!-- COUREUR DEVANT (plus grand)      -->
+    <!-- =============================== -->
+    <g class="runner-front">
+      <!-- Tête -->
+      <circle cx="128" cy="52" r="16" stroke="#F0F0F0" stroke-width="8" fill="none"/>
 
-    <!-- Dust particles behind feet -->
-    <circle class="dust dust-1" cx="42" cy="162" r="2.5" fill="#888"/>
-    <circle class="dust dust-2" cx="36" cy="158" r="2"   fill="#888"/>
-    <circle class="dust dust-3" cx="46" cy="166" r="1.8" fill="#888"/>
+      <!-- Corps (torse) -->
+      <polyline points="118,70 100,132"
+                stroke="#F0F0F0" stroke-width="8"/>
+
+      <!-- Bras gauche (devant, plié) -->
+      <g class="f-arm-l">
+        <polyline points="112,84 86,108 74,96"
+                  stroke="#F0F0F0" stroke-width="8"/>
+      </g>
+
+      <!-- Bras droit (derrière, plié) -->
+      <g class="f-arm-r">
+        <polyline points="112,84 136,108 146,98"
+                  stroke="#F0F0F0" stroke-width="8"/>
+      </g>
+
+      <!-- Jambe gauche (devant, pliée) -->
+      <g class="f-leg-l">
+        <polyline points="100,132 72,178 52,168"
+                  stroke="#F0F0F0" stroke-width="8"/>
+      </g>
+
+      <!-- Jambe droite (derrière, pliée) -->
+      <g class="f-leg-r">
+        <polyline points="100,132 128,180 146,172"
+                  stroke="#F0F0F0" stroke-width="8"/>
+      </g>
+    </g>
+
+    <!-- ==================== -->
+    <!-- LIGNES SOUS LES PIEDS -->
+    <!-- ==================== -->
+    <g>
+      <line class="speed-line sl-1" x1="40" y1="210" x2="72" y2="210"
+            stroke="#F0F0F0" stroke-width="6" opacity="0.5"/>
+      <line class="speed-line sl-2" x1="90" y1="225" x2="130" y2="225"
+            stroke="#F0F0F0" stroke-width="6" opacity="0.4"/>
+      <line class="speed-line sl-3" x1="150" y1="215" x2="185" y2="215"
+            stroke="#F0F0F0" stroke-width="6" opacity="0.3"/>
+    </g>
 
   </svg>
 </body>
 </html>
 """
-    components.html(runner_html, height=220)
+    components.html(runner_html, height=300)
