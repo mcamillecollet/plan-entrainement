@@ -493,7 +493,8 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
         semaines_redescente = 2
     else:
         semaines_redescente = 1
-    semaines_build = duree_semaine - semaines_redescente - 1  # -1 pour la semaine course
+    semaines_build = duree_semaine - semaines_redescente - 1 - 1  # -1 pic, -1 course
+    semaine_pic = semaines_build + 1
 
     # Déterminer les semaines allégées selon la durée du plan
     # < 10 sem : aucune
@@ -521,7 +522,7 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
 
     for semaine in range(1, duree_semaine + 1):
         if semaine <= semaines_build:
-            # Phase de préparation
+            # Phase de progression
             if semaine in semaines_allegees:
                 volume_total = current_volume * 0.70
             else:
@@ -529,9 +530,12 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
                     current_volume = min(current_volume * (1 + rate), volume_pic)
                 volume_total = current_volume
                 prog_count += 1
+        elif semaine == semaine_pic:
+            # Semaine pic : volume maximum
+            volume_total = volume_pic
         elif semaine < duree_semaine:
             # Phase de redescente (avant la semaine course)
-            step = semaine - semaines_build
+            step = semaine - semaine_pic
             if semaines_redescente == 3:
                 coef = {1: 0.75, 2: 0.60, 3: 0.45}[step]
             elif semaines_redescente == 2:
@@ -545,6 +549,8 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
 
         if semaine <= semaines_build:
             sem_type = 'Allégée' if semaine in semaines_allegees else 'Progression'
+        elif semaine == semaine_pic:
+            sem_type = 'Pic'
         elif semaine < duree_semaine:
             sem_type = 'Redescente'
         else:

@@ -186,7 +186,7 @@ def render():
         ax2.fill_between(plan_df['Semaine'], plan_df['Volume total (km)'],
                          alpha=0.06, color=CHART_LINE_ASCENT)
 
-        colors_type = {'Progression': CHART_LINE_ASCENT, 'Allégée': '#B0B0B0', 'Redescente': CHART_LINE_DESCENT, 'Course': '#E8C547'}
+        colors_type = {'Progression': CHART_LINE_ASCENT, 'Allégée': '#B0B0B0', 'Pic': '#E8C547', 'Redescente': CHART_LINE_DESCENT, 'Course': '#93A5CF'}
         for t, color in colors_type.items():
             mask = plan_df['Type'] == t
             if mask.any():
