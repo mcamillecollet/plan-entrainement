@@ -510,7 +510,7 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
 
     if nb_prog > 1 and volume_build_max > volume_debut:
         rate = (volume_build_max / volume_debut) ** (1 / (nb_prog - 1)) - 1
-        rate = max(0.05, min(0.10, rate))
+        rate = max(0.02, min(0.10, rate))
     else:
         rate = 0.07
 
