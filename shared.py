@@ -483,11 +483,14 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
     plan = []
 
     # Redescente + dernière semaine = course (taper)
-    # >= 10 sem : 2 redescente (5k/10k) ou 3 redescente (semi/marathon)
     # < 10 sem : 1 redescente
+    # 10-14 sem : 2 redescentes (tous types)
+    # > 14 sem : 3 redescentes (semi/marathon), 2 sinon
     course_longue = type_course in ('Semi-marathon', 'Marathon')
-    if duree_semaine >= 10:
+    if duree_semaine > 14:
         semaines_redescente = 3 if course_longue else 2
+    elif duree_semaine >= 10:
+        semaines_redescente = 2
     else:
         semaines_redescente = 1
     semaines_build = duree_semaine - semaines_redescente - 1  # -1 pour la semaine course
