@@ -530,14 +530,14 @@ def format_pace(pace_min_per_km):
 
 # --- Couleurs de l'application ---
 COLOR_PRIMARY = "#B0B0B0"
-COLOR_SECONDARY = "#93A5CF"  # Pantone 6099 C
+COLOR_SECONDARY = "#5A77B5"  # Pantone 6102 C
 
 # --- Style partagé pour les graphiques matplotlib ---
 CHART_BG = "#E8E8E8"
 CHART_LINE_ASCENT = "#D04D46"   # Pantone 6047 C
-CHART_LINE_DESCENT = "#93A5CF"  # Pantone 6099 C
+CHART_LINE_DESCENT = "#5A77B5"  # Pantone 6102 C
 CHART_FILL_ASCENT = "#D04D46"   # Pantone 6047 C
-CHART_FILL_DESCENT = "#93A5CF"  # Pantone 6099 C
+CHART_FILL_DESCENT = "#5A77B5"  # Pantone 6102 C
 CHART_HIGHLIGHT = "#D04D46"     # Pantone 6047 C
 
 
