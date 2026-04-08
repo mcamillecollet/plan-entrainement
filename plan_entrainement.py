@@ -815,15 +815,19 @@ if uploaded_file is not None:
                             vitesse_str = f"{vitesse_slow} – {vitesse_fast}" if vitesse_slow and vitesse_fast else "—"
                             st.markdown(f"""
                             <div style="background: {color}; border: 1px solid #999; border-radius: 8px;
-                                        padding: 0.8rem 1.2rem; margin-bottom: 0.5rem;
-                                        display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
-                              <span style="font-family: 'Outfit', sans-serif; font-weight: 500; color: #FFF; flex: 2; min-width: 200px;">
+                                        padding: 0.5rem 0.8rem; margin-bottom: 0.5rem;
+                                        display: flex; justify-content: space-between; align-items: center;
+                                        flex-wrap: nowrap; gap: 0.3rem;">
+                              <span style="font-family: 'Outfit', sans-serif; font-weight: 500; color: #FFF; flex: 2;
+                                          font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                 {nom}
                               </span>
-                              <span style="font-family: 'Geist Mono', monospace; color: #FFF; flex: 1; text-align: center; min-width: 120px;">
-                                {format_pace(pace_fast)} – {format_pace(pace_slow)} /km
+                              <span style="font-family: 'Geist Mono', monospace; color: #FFF; flex: 1;
+                                          text-align: center; font-size: 0.78rem; white-space: nowrap;">
+                                {format_pace(pace_fast)}–{format_pace(pace_slow)} /km
                               </span>
-                              <span style="font-family: 'Geist Mono', monospace; color: #FFF; flex: 1; text-align: right; min-width: 120px;">
+                              <span style="font-family: 'Geist Mono', monospace; color: #FFF; flex: 1;
+                                          text-align: right; font-size: 0.78rem; white-space: nowrap;">
                                 {vitesse_str} km/h
                               </span>
                             </div>
