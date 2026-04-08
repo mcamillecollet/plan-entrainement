@@ -496,10 +496,11 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
     # > 14 sem : 2 allégées à 1/3 et 2/3 de (progression + pic)
     semaines_allegees = set()
     if duree_semaine > 14:
-        tiers = semaine_pic // 3
-        semaines_allegees = {tiers, 2 * tiers}
+        t1 = round(semaine_pic / 3)
+        t2 = round(2 * semaine_pic / 3)
+        semaines_allegees = {t1, t2}
     elif duree_semaine >= 12:
-        milieu = semaine_pic // 2
+        milieu = (semaine_pic + 1) // 2
         semaines_allegees = {milieu}
 
     nb_prog = sum(1 for s in range(1, semaines_build + 1) if s not in semaines_allegees)
