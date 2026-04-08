@@ -15,7 +15,7 @@ if "current_page" not in st.session_state:
 
 current = st.session_state["current_page"]
 
-# --- CSS global + navbar ---
+# --- CSS global + navbar fixe ---
 st.markdown("""
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap');
@@ -27,23 +27,27 @@ st.markdown("""
   }
 
   [data-testid="stAppViewContainer"] > .main {
-    padding-top: 1rem !important;
+    padding-top: 4.5rem !important;
   }
 
-  .glass-nav {
+  .glass-navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
     display: flex;
     align-items: center;
-    padding: 0 1.5rem;
+    justify-content: space-between;
+    padding: 0 2.5rem;
     height: 52px;
     background: rgba(30, 30, 30, 0.75);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 10px;
-    margin-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   }
 
-  .glass-nav .nav-brand {
+  .glass-navbar .nav-brand {
     font-family: 'Outfit', sans-serif;
     font-weight: 600;
     font-size: 0.9rem;
@@ -52,50 +56,68 @@ st.markdown("""
     color: #FFFFFF;
   }
 
-  /* Restyle des boutons nav en glass */
-  .nav-row .stButton > button {
+  .glass-navbar .nav-buttons {
+    display: flex;
+    gap: 0.3rem;
+    align-items: center;
+  }
+
+  /* Masquer la rangée de boutons Streamlit (sous la navbar) */
+  .nav-btn-row {
+    position: fixed;
+    top: 0;
+    right: 2.5rem;
+    z-index: 10000;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .nav-btn-row .stButton > button {
     background: transparent !important;
     color: #AAAAAA !important;
     border: none !important;
     font-family: 'Geist Mono', monospace !important;
-    font-size: 0.70rem !important;
+    font-size: 0.72rem !important;
     font-weight: 500 !important;
-    letter-spacing: 0.10em !important;
+    letter-spacing: 0.12em !important;
     text-transform: uppercase !important;
-    padding: 0.45rem 1rem !important;
+    padding: 0.5rem 1.2rem !important;
     border-radius: 6px !important;
     transition: all 0.2s ease !important;
     box-shadow: none !important;
     margin: 0 !important;
+    white-space: nowrap !important;
   }
 
-  .nav-row .stButton > button:hover {
+  .nav-btn-row .stButton > button:hover {
     color: #FFFFFF !important;
     background: rgba(255, 255, 255, 0.08) !important;
   }
 
-  .nav-row .stButton > button[kind="primary"],
-  .nav-row .stButton > button:disabled {
+  .nav-btn-row .stButton > button[kind="primary"] {
     color: #FFFFFF !important;
     background: rgba(255, 255, 255, 0.12) !important;
   }
 </style>
+
+<div class="glass-navbar">
+  <span class="nav-brand">Plan d'entra\u00eenement</span>
+</div>
 """, unsafe_allow_html=True)
 
-# --- Barre de navigation ---
-st.markdown('<div class="glass-nav"><span class="nav-brand">Plan d\'entra\u00eenement</span></div>', unsafe_allow_html=True)
-
-st.markdown('<div class="nav-row">', unsafe_allow_html=True)
-cols = st.columns([1] * len(PAGES))
-for i, page_name in enumerate(PAGES):
-    with cols[i]:
-        btn_type = "primary" if page_name == current else "secondary"
-        if st.button(page_name, key=f"nav_{page_name}", type=btn_type, use_container_width=True):
-            st.session_state["current_page"] = page_name
-            st.rerun()
-st.markdown('</div>', unsafe_allow_html=True)
-
-st.markdown('<hr style="border: none; border-top: 1px solid #4A4A4A; margin: 1rem 0 2rem 0;">', unsafe_allow_html=True)
+# --- Boutons de navigation fixés dans la navbar ---
+with st.container():
+    st.markdown('<div class="nav-btn-row">', unsafe_allow_html=True)
+    cols = st.columns(len(PAGES))
+    for i, page_name in enumerate(PAGES):
+        with cols[i]:
+            btn_type = "primary" if page_name == current else "secondary"
+            if st.button(page_name, key=f"nav_{page_name}", type=btn_type):
+                st.session_state["current_page"] = page_name
+                st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # --- Rendu de la page courante ---
 if current == "Accueil":

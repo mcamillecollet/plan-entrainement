@@ -41,19 +41,36 @@ def render():
     st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
     st.markdown('<p class="section-label">Param\u00e8tres du plan d\'entra\u00eenement</p>', unsafe_allow_html=True)
 
+    # Initialiser les valeurs par défaut en session state
+    defaults = {
+        'p_niveau': 0, 'p_type_course': 0, 'p_chrono_actuel': '',
+        'p_chrono_cible': '', 'p_duree_semaine': 4, 'p_sorties': 1,
+        'p_volume_debut': 5, 'p_volume_pic': 5, 'p_date_course': None
+    }
+    for k, v in defaults.items():
+        if k not in st.session_state:
+            st.session_state[k] = v
+
+    niveaux = ["D\u00e9butant", "Interm\u00e9diaire", "Avanc\u00e9"]
+    types_course = ["5km", "10km", "Semi-marathon", "Marathon"]
+    durees = list(range(4, 21))
+    sorties_options = [2, 3, 4]
+    volumes_debut = list(range(5, 21))
+    volumes_pic = list(range(15, 105, 5))
+
     col_a, col_b = st.columns(2)
     with col_a:
-        niveau = st.radio("Niveau", ["D\u00e9butant", "Interm\u00e9diaire", "Avanc\u00e9"], horizontal=True)
-        type_course = st.selectbox("Type de course", ["5km", "10km", "Semi-marathon", "Marathon"])
-        chrono_actuel = st.text_input("Chrono actuel (ex: 1h45)")
-        chrono_cible = st.text_input("Chrono cible (ex: 1h30)")
+        niveau = st.radio("Niveau", niveaux, horizontal=True, key="p_niveau")
+        type_course = st.selectbox("Type de course", types_course, key="p_type_course")
+        chrono_actuel = st.text_input("Chrono actuel (ex: 1h45)", key="p_chrono_actuel")
+        chrono_cible = st.text_input("Chrono cible (ex: 1h30)", key="p_chrono_cible")
     with col_b:
-        duree_semaine = st.selectbox("Dur\u00e9e du plan (semaines)", list(range(4, 21)), index=4)
-        sorties_par_semaine = st.selectbox("Sorties par semaine", [2, 3, 4], index=1)
-        volume_debut = st.selectbox("Volume de d\u00e9part (km/semaine)", list(range(5, 21)), index=5)
-        volume_pic = st.selectbox("Volume pic (km/semaine)", list(range(15, 105, 5)), index=5)
+        duree_semaine = st.selectbox("Dur\u00e9e du plan (semaines)", durees, key="p_duree_semaine")
+        sorties_par_semaine = st.selectbox("Sorties par semaine", sorties_options, key="p_sorties")
+        volume_debut = st.selectbox("Volume de d\u00e9part (km/semaine)", volumes_debut, key="p_volume_debut")
+        volume_pic = st.selectbox("Volume pic (km/semaine)", volumes_pic, key="p_volume_pic")
 
-    date_course = st.date_input("Date de la course", value=None, format="DD/MM/YYYY")
+    date_course = st.date_input("Date de la course", value=None, format="DD/MM/YYYY", key="p_date_course")
 
     # --- Estimation VDOT et allures ---
     if chrono_actuel or chrono_cible:
