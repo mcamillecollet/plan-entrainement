@@ -214,20 +214,17 @@ st.markdown("""
     accent-color: #D04D46 !important;
   }
 
-  /* Input focus border in Pantone 6047 C */
+  /* Input focus border in Pantone 6047 C — champ de saisie uniquement */
   [data-testid="stTextInput"] input:focus,
-  [data-testid="stSelectbox"] div[data-baseweb="select"]:focus-within,
   [data-testid="stDateInput"] input:focus {
     border-color: #D04D46 !important;
     box-shadow: 0 0 0 1px #D04D46 !important;
     outline: none !important;
   }
 
-  [data-testid="stRadio"]:focus-within,
-  [data-testid="stSelectbox"]:focus-within,
-  [data-testid="stTextInput"]:focus-within,
-  [data-testid="stDateInput"]:focus-within {
+  [data-testid="stSelectbox"] div[data-baseweb="select"]:focus-within {
     border-color: #D04D46 !important;
+    box-shadow: 0 0 0 1px #D04D46 !important;
   }
 
   /* Date picker popover: month/year text, arrows, and selection in anthracite */
@@ -531,7 +528,7 @@ def format_pace(pace_min_per_km):
 
 
 # --- Couleurs de l'application ---
-COLOR_PRIMARY = "#D04D46"    # Pantone 6047 C
+COLOR_PRIMARY = "#B0B0B0"
 COLOR_SECONDARY = "#93A5CF"  # Pantone 6099 C
 
 # --- Style partagé pour les graphiques matplotlib ---
