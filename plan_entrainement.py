@@ -416,22 +416,48 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
     total = easy_pct + seuil_pct + fraction_pct + long_pct
     easy_pct /= total; seuil_pct /= total; fraction_pct /= total; long_pct /= total
 
-    semaines_taper = 3 if duree_semaine >= 12 else 2
+    # --- Tapering : 1-2 dernières semaines ---
+    semaines_taper = 2 if duree_semaine >= 10 else 1
     semaines_build = duree_semaine - semaines_taper
+
+    # --- Progression hebdomadaire de +5 à +10 % ---
+    # Compter les semaines de progression (hors semaines allégées toutes les 3 semaines)
+    nb_prog = sum(1 for s in range(1, semaines_build + 1) if s % 3 != 0)
+
+    if nb_prog > 1 and volume_pic > volume_debut:
+        rate = (volume_pic / volume_debut) ** (1 / (nb_prog - 1)) - 1
+        rate = max(0.05, min(0.10, rate))
+    else:
+        rate = 0.07
+
+    # --- Construction de la courbe de volume ---
+    current_volume = volume_debut
+    prog_count = 0
 
     for semaine in range(1, duree_semaine + 1):
         if semaine <= semaines_build:
-            progress = (semaine - 1) / max(semaines_build - 1, 1)
-            volume_total = volume_debut + (volume_pic - volume_debut) * progress
-            if semaine % 4 == 0 and semaine < semaines_build:
-                volume_total *= 0.75
+            if semaine % 3 == 0:
+                # Semaine allégée : -30 % du volume courant
+                volume_total = current_volume * 0.70
+            else:
+                if prog_count > 0:
+                    current_volume = min(current_volume * (1 + rate), volume_pic)
+                volume_total = current_volume
+                prog_count += 1
         else:
+            # Tapering : réduction progressive
             taper_step = semaine - semaines_build
-            coef = 0.70 - 0.15 * (taper_step - 1)
-            volume_total = volume_pic * max(coef, 0.30)
+            if semaines_taper == 2:
+                coef = 0.65 if taper_step == 1 else 0.50
+            else:
+                coef = 0.55
+            volume_total = volume_pic * coef
 
         plan.append({
             'Semaine': semaine,
+            'Type': 'Allégée' if (semaine <= semaines_build and semaine % 3 == 0)
+                    else 'Taper' if semaine > semaines_build
+                    else 'Progression',
             'Easy Run (km)': round(volume_total * easy_pct, 1),
             'Seuil / Tempo (km)': round(volume_total * seuil_pct, 1),
             'Fractionné / Côtes (km)': round(volume_total * fraction_pct, 1),
@@ -865,10 +891,19 @@ if uploaded_file is not None:
             fig2, ax2 = plt.subplots(figsize=(11, 3.5))
             style_ax(ax2, fig2)
             ax2.plot(plan_df['Semaine'], plan_df['Volume total (km)'],
-                     color=CHART_LINE_ASCENT, linewidth=2, marker='o',
-                     markersize=5, markerfacecolor='white', markeredgewidth=1.5)
+                     color=CHART_LINE_ASCENT, linewidth=2, zorder=3)
             ax2.fill_between(plan_df['Semaine'], plan_df['Volume total (km)'],
                              alpha=0.06, color=CHART_LINE_ASCENT)
+
+            # Marqueurs par type de semaine
+            colors_type = {'Progression': CHART_LINE_ASCENT, 'Allégée': '#B0B0B0', 'Taper': CHART_LINE_DESCENT}
+            for t, color in colors_type.items():
+                mask = plan_df['Type'] == t
+                if mask.any():
+                    ax2.scatter(plan_df.loc[mask, 'Semaine'], plan_df.loc[mask, 'Volume total (km)'],
+                                color=color, s=40, zorder=5, edgecolors='white', linewidths=1.2, label=t)
+
+            ax2.legend(fontsize=8, loc='upper left', framealpha=0.8)
             ax2.set_xlabel("Semaine", fontsize=10)
             ax2.set_ylabel("Volume (km)", fontsize=10)
             ax2.xaxis.set_major_locator(MultipleLocator(1))
