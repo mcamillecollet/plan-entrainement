@@ -650,8 +650,7 @@ if uploaded_file is not None:
         for cote, mid, y_label, angle in cote_labels:
             ax.text(mid, y_label, f"{cote['pente_pct']}%",
                     ha='center', va='bottom', color=CHART_HIGHLIGHT,
-                    fontsize=8.5, fontweight='bold', rotation=angle,
-                    rotation_mode='anchor', zorder=6)
+                    fontsize=8.5, fontweight='bold', zorder=6)
 
         fig.tight_layout()
         st.pyplot(fig)
@@ -735,8 +734,7 @@ if uploaded_file is not None:
             for desc, mid, y_label, angle in desc_labels:
                 ax3.text(mid, y_label, f"({desc['pente_pct']})%",
                          ha='center', va='bottom', color=CHART_LINE_DESCENT,
-                         fontsize=8.5, fontweight='bold', rotation=angle,
-                         rotation_mode='anchor', zorder=6)
+                         fontsize=8.5, fontweight='bold', zorder=6)
 
             fig3.tight_layout()
             st.pyplot(fig3)
