@@ -542,7 +542,7 @@ st.markdown("# Analyse GPX & Plan d'entraînement")
 st.markdown('<p class="section-label">Analyse de parcours — Planification personnalisée</p>', unsafe_allow_html=True)
 st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
 
-uploaded_file = st.file_uploader("Importer un fichier GPX", type=['gpx'])
+uploaded_file = st.file_uploader("Importer le fichier GPX de votre prochaine course", type=['gpx'])
 
 if uploaded_file is not None:
     analyse = analyser_gpx(uploaded_file)
