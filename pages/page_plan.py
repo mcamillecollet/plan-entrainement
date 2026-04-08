@@ -60,7 +60,7 @@ def render():
 
     col_a, col_b = st.columns(2)
     with col_a:
-        niveau = st.radio("Niveau", niveaux, horizontal=True, key="p_niveau")
+        niveau = st.selectbox("Niveau", niveaux, key="p_niveau")
         type_course = st.selectbox("Type de course", types_course, key="p_type_course")
         chrono_actuel = st.text_input("Chrono actuel (ex: 1h45)", key="p_chrono_actuel")
         chrono_cible = st.text_input("Chrono cible (ex: 1h30)", key="p_chrono_cible")
