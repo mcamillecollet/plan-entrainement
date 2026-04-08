@@ -490,15 +490,16 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
     semaine_pic = semaines_build + 1
 
     # Déterminer les semaines allégées selon la durée du plan
+    # Placement basé sur progression + pic (= semaine_pic semaines)
     # < 12 sem : aucune
-    # 12-14 sem : 1 allégée au milieu de la phase build
-    # > 14 sem : 2 allégées à intervalle régulier (1/3 et 2/3 du build)
+    # 12-14 sem : 1 allégée au milieu de (progression + pic)
+    # > 14 sem : 2 allégées à 1/3 et 2/3 de (progression + pic)
     semaines_allegees = set()
     if duree_semaine > 14:
-        tiers = semaines_build // 3
+        tiers = semaine_pic // 3
         semaines_allegees = {tiers, 2 * tiers}
     elif duree_semaine >= 12:
-        milieu = semaines_build // 2
+        milieu = semaine_pic // 2
         semaines_allegees = {milieu}
 
     nb_prog = sum(1 for s in range(1, semaines_build + 1) if s not in semaines_allegees)
