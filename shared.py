@@ -542,13 +542,13 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
             volume_total = volume_pic * 0.35
 
         if semaine <= semaines_build:
-            sem_type = 'Allégée' if semaine in semaines_allegees else 'Progression'
+            sem_type = 'Cool down' if semaine in semaines_allegees else 'Under progress'
         elif semaine == semaine_pic:
-            sem_type = 'Pic'
+            sem_type = 'Peak'
         elif semaine < duree_semaine:
-            sem_type = 'Redescente'
+            sem_type = 'Recovery'
         else:
-            sem_type = 'Course'
+            sem_type = 'D-day'
 
         is_long_run = (semaine % 2 == 1)
 

@@ -182,11 +182,11 @@ def render():
         fig2, ax2 = plt.subplots(figsize=(11, 3.5))
         style_ax(ax2, fig2)
         ax2.plot(plan_df['Semaine'], plan_df['Volume total (km)'],
-                 color=CHART_LINE_ASCENT, linewidth=2, zorder=3)
+                 color='#3C3C3C', linewidth=2, zorder=3)
         ax2.fill_between(plan_df['Semaine'], plan_df['Volume total (km)'],
-                         alpha=0.06, color=CHART_LINE_ASCENT)
+                         alpha=0.06, color='#3C3C3C')
 
-        colors_type = {'Progression': CHART_LINE_ASCENT, 'Allégée': '#B0B0B0', 'Pic': '#E8C547', 'Redescente': CHART_LINE_DESCENT, 'Course': '#93A5CF'}
+        colors_type = {'Under progress': CHART_LINE_ASCENT, 'Cool down': '#B0B0B0', 'Peak': '#CE0058', 'Recovery': COLOR_SECONDARY, 'D-day': '#7AC4B7'}
         for t, color in colors_type.items():
             mask = plan_df['Type'] == t
             if mask.any():
