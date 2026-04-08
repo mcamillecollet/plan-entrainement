@@ -208,10 +208,26 @@ st.markdown("""
     padding: 0.2rem 0.4rem;
   }
 
-  /* Radio button circle/dot in anthracite */
+  /* Radio button circle/dot in Pantone 6047 C */
   [data-testid="stRadio"] div[role="radiogroup"] label div[data-testid="stMarkdownContainer"],
   [data-testid="stRadio"] div[role="radiogroup"] input[type="radio"] {
-    accent-color: #2E2E2E !important;
+    accent-color: #D04D46 !important;
+  }
+
+  /* Input focus border in Pantone 6047 C */
+  [data-testid="stTextInput"] input:focus,
+  [data-testid="stSelectbox"] div[data-baseweb="select"]:focus-within,
+  [data-testid="stDateInput"] input:focus {
+    border-color: #D04D46 !important;
+    box-shadow: 0 0 0 1px #D04D46 !important;
+    outline: none !important;
+  }
+
+  [data-testid="stRadio"]:focus-within,
+  [data-testid="stSelectbox"]:focus-within,
+  [data-testid="stTextInput"]:focus-within,
+  [data-testid="stDateInput"]:focus-within {
+    border-color: #D04D46 !important;
   }
 
   /* Date picker popover: month/year text, arrows, and selection in anthracite */
@@ -515,16 +531,16 @@ def format_pace(pace_min_per_km):
 
 
 # --- Couleurs de l'application ---
-COLOR_PRIMARY = "#B0B0B0"
+COLOR_PRIMARY = "#D04D46"    # Pantone 6047 C
 COLOR_SECONDARY = "#93A5CF"  # Pantone 6099 C
 
 # --- Style partagé pour les graphiques matplotlib ---
 CHART_BG = "#E8E8E8"
-CHART_LINE_ASCENT = "#722F37"
+CHART_LINE_ASCENT = "#D04D46"   # Pantone 6047 C
 CHART_LINE_DESCENT = "#93A5CF"  # Pantone 6099 C
-CHART_FILL_ASCENT = "#722F37"
+CHART_FILL_ASCENT = "#D04D46"   # Pantone 6047 C
 CHART_FILL_DESCENT = "#93A5CF"  # Pantone 6099 C
-CHART_HIGHLIGHT = "#722F37"
+CHART_HIGHLIGHT = "#D04D46"     # Pantone 6047 C
 
 
 def style_ax(ax, fig):
