@@ -17,28 +17,28 @@ def render():
     st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
 
     analyse = st.session_state.get('analyse')
-    if not analyse:
-        st.warning("Veuillez d'abord importer un fichier GPX sur la page **Analyse GPX**.")
-        return
 
-    st.markdown('<p class="section-label">Parcours charg\u00e9</p>', unsafe_allow_html=True)
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown(f"""
-        <div class="stat-card">
-          <span class="stat-label">Distance</span>
-          <span class="stat-value">{analyse['distance_totale_km']:.2f} <span class="stat-unit">km</span></span>
-        </div>
-        """, unsafe_allow_html=True)
-    with col2:
-        st.markdown(f"""
-        <div class="stat-card">
-          <span class="stat-label">D+</span>
-          <span class="stat-value">{analyse['D_plus_m']:.0f} <span class="stat-unit">m</span></span>
-        </div>
-        """, unsafe_allow_html=True)
+    if analyse:
+        st.markdown('<p class="section-label">Parcours charg\u00e9</p>', unsafe_allow_html=True)
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown(f"""
+            <div class="stat-card">
+              <span class="stat-label">Distance</span>
+              <span class="stat-value">{analyse['distance_totale_km']:.2f} <span class="stat-unit">km</span></span>
+            </div>
+            """, unsafe_allow_html=True)
+        with col2:
+            st.markdown(f"""
+            <div class="stat-card">
+              <span class="stat-label">D+</span>
+              <span class="stat-value">{analyse['D_plus_m']:.0f} <span class="stat-unit">m</span></span>
+            </div>
+            """, unsafe_allow_html=True)
+        st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
+    else:
+        st.info("Aucun parcours GPX charg\u00e9. Vous pouvez g\u00e9n\u00e9rer un plan sans analyse de parcours, ou importer un GPX sur la page **Analyse GPX**.")
 
-    st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
     st.markdown('<p class="section-label">Param\u00e8tres du plan d\'entra\u00eenement</p>', unsafe_allow_html=True)
 
     # Initialiser les valeurs par défaut en session state
@@ -168,9 +168,10 @@ def render():
     # --- Génération du plan ---
     st.markdown("")
     if st.button("G\u00e9n\u00e9rer le plan d'entra\u00eenement"):
+        d_plus = analyse['D_plus_m'] if analyse else 0
         plan_df = generer_plan_personnalise(
             niveau, type_course, volume_debut, volume_pic,
-            duree_semaine, sorties_par_semaine, analyse['D_plus_m']
+            duree_semaine, sorties_par_semaine, d_plus
         )
 
         st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
