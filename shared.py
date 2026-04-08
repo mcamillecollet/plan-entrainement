@@ -485,7 +485,23 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
     semaines_taper = 2 if duree_semaine >= 10 else 1
     semaines_build = duree_semaine - semaines_taper
 
-    nb_prog = sum(1 for s in range(1, semaines_build + 1) if s % 3 != 0)
+    # Déterminer les semaines allégées selon la durée du plan
+    semaines_allegees = set()
+    if duree_semaine >= 14:
+        # Plus de 14 semaines : 1 allégée toutes les 3 semaines
+        for s in range(1, semaines_build + 1):
+            if s % 3 == 0:
+                semaines_allegees.add(s)
+    elif duree_semaine >= 11:
+        # 11-13 semaines (arrondi à ~12) : 2 allégées (semaines 4 et 8)
+        semaines_allegees = {4, 8}
+    elif duree_semaine >= 8:
+        # 8-10 semaines : 1 allégée au milieu de la phase build
+        milieu = semaines_build // 2
+        semaines_allegees = {milieu}
+    # Moins de 8 semaines : aucune allégée
+
+    nb_prog = sum(1 for s in range(1, semaines_build + 1) if s not in semaines_allegees)
 
     if nb_prog > 1 and volume_pic > volume_debut:
         rate = (volume_pic / volume_debut) ** (1 / (nb_prog - 1)) - 1
@@ -498,7 +514,7 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
 
     for semaine in range(1, duree_semaine + 1):
         if semaine <= semaines_build:
-            if semaine % 3 == 0:
+            if semaine in semaines_allegees:
                 volume_total = current_volume * 0.70
             else:
                 if prog_count > 0:
@@ -513,7 +529,7 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
                 coef = 0.55
             volume_total = volume_pic * coef
 
-        sem_type = ('All\u00e9g\u00e9e' if (semaine <= semaines_build and semaine % 3 == 0)
+        sem_type = ('Allégée' if (semaine <= semaines_build and semaine in semaines_allegees)
                     else 'Taper' if semaine > semaines_build
                     else 'Progression')
 
