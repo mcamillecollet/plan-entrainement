@@ -387,41 +387,11 @@ def analyser_gpx(gpx_file):
 def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, duree_semaine, sorties_par_semaine, D_plus):
     plan = []
 
-    if niveau == "Débutant":
-        easy_pct, seuil_pct, fraction_pct, long_pct = 0.45, 0.15, 0.10, 0.30
-    elif niveau == "Intermédiaire":
-        easy_pct, seuil_pct, fraction_pct, long_pct = 0.30, 0.25, 0.20, 0.25
-    else:
-        easy_pct, seuil_pct, fraction_pct, long_pct = 0.25, 0.25, 0.25, 0.25
-
-    if type_course == "5km":
-        fraction_pct += 0.10; long_pct -= 0.10
-    elif type_course == "10km":
-        fraction_pct += 0.05; seuil_pct += 0.05; easy_pct -= 0.05; long_pct -= 0.05
-    elif type_course == "Semi-marathon":
-        seuil_pct += 0.05; easy_pct -= 0.05
-    elif type_course == "Marathon":
-        long_pct += 0.10; fraction_pct -= 0.10
-
-    if D_plus > 500:
-        fraction_pct += 0.05; seuil_pct -= 0.05
-
-    if sorties_par_semaine == 2:
-        easy_pct += seuil_pct + fraction_pct
-        seuil_pct, fraction_pct = 0, 0
-    elif sorties_par_semaine == 3:
-        seuil_pct += fraction_pct
-        fraction_pct = 0
-
-    total = easy_pct + seuil_pct + fraction_pct + long_pct
-    easy_pct /= total; seuil_pct /= total; fraction_pct /= total; long_pct /= total
-
     # --- Tapering : 1-2 dernières semaines ---
     semaines_taper = 2 if duree_semaine >= 10 else 1
     semaines_build = duree_semaine - semaines_taper
 
     # --- Progression hebdomadaire de +5 à +10 % ---
-    # Compter les semaines de progression (hors semaines allégées toutes les 3 semaines)
     nb_prog = sum(1 for s in range(1, semaines_build + 1) if s % 3 != 0)
 
     if nb_prog > 1 and volume_pic > volume_debut:
@@ -453,19 +423,74 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
                 coef = 0.55
             volume_total = volume_pic * coef
 
-        plan.append({
-            'Semaine': semaine,
-            'Type': 'Allégée' if (semaine <= semaines_build and semaine % 3 == 0)
+        sem_type = ('Allégée' if (semaine <= semaines_build and semaine % 3 == 0)
                     else 'Taper' if semaine > semaines_build
-                    else 'Progression',
-            'Easy Run (km)': round(volume_total * easy_pct, 1),
-            'Seuil / Tempo (km)': round(volume_total * seuil_pct, 1),
-            'Fractionné / Côtes (km)': round(volume_total * fraction_pct, 1),
-            'Long Run (km)': round(volume_total * long_pct, 1),
-            'Volume total (km)': round(volume_total, 1)
-        })
+                    else 'Progression')
+
+        # --- Répartition des séances selon le nombre de sorties ---
+        # Sortie longue : alternance Long Run (avec AS) / EF, 1 semaine sur 2
+        is_long_run = (semaine % 2 == 1)
+
+        if sorties_par_semaine == 2:
+            # Séance 1 : qualitative (seuil/VMA) = 40 %
+            # Séance 2 : sortie longue ou EF (AS quand Long Run) = 60 %
+            quali_km = round(volume_total * 0.40, 1)
+            sortie_longue_km = round(volume_total * 0.60, 1)
+            if is_long_run:
+                as_km = round(sortie_longue_km * 0.15, 1)
+                detail = f"Long Run ({round(sortie_longue_km - as_km, 1)}) + AS ({as_km})"
+            else:
+                detail = f"EF ({sortie_longue_km})"
+
+            plan.append({
+                'Semaine': semaine, 'Type': sem_type,
+                'Qualitative seuil/VMA (km)': quali_km,
+                'Sortie longue ou EF (km)': sortie_longue_km,
+                'Détail sortie longue': detail,
+                'Volume total (km)': round(volume_total, 1)
+            })
+
+        elif sorties_par_semaine == 3:
+            # Séance 1 : EF = 25 %
+            # Séance 2 : qualitative (VMA/seuil/côtes) = 25 %
+            # Séance 3 : sortie longue (avec AS) = 50 %  (dont 10-20 % en AS)
+            ef_km = round(volume_total * 0.25, 1)
+            quali_km = round(volume_total * 0.25, 1)
+            sortie_longue_km = round(volume_total * 0.50, 1)
+            as_km = round(sortie_longue_km * 0.15, 1)
+
+            plan.append({
+                'Semaine': semaine, 'Type': sem_type,
+                'EF (km)': ef_km,
+                'Qualitative VMA/seuil/côtes (km)': quali_km,
+                'Sortie longue (km)': sortie_longue_km,
+                'dont AS (km)': as_km,
+                'Volume total (km)': round(volume_total, 1)
+            })
+
+        else:  # 4 séances
+            # Séance 1 : EF = 20 %
+            # Séance 2 : qualitative 1 (VMA) = 15 %
+            # Séance 3 : qualitative 2 (seuil/côtes) = 15 %
+            # Séance 4 : sortie longue (avec AS) = 50 %  (dont 10-20 % en AS)
+            ef_km = round(volume_total * 0.20, 1)
+            quali1_km = round(volume_total * 0.15, 1)
+            quali2_km = round(volume_total * 0.15, 1)
+            sortie_longue_km = round(volume_total * 0.50, 1)
+            as_km = round(sortie_longue_km * 0.15, 1)
+
+            plan.append({
+                'Semaine': semaine, 'Type': sem_type,
+                'EF (km)': ef_km,
+                'Qualitative 1 VMA (km)': quali1_km,
+                'Qualitative 2 seuil/côtes (km)': quali2_km,
+                'Sortie longue (km)': sortie_longue_km,
+                'dont AS (km)': as_km,
+                'Volume total (km)': round(volume_total, 1)
+            })
 
     return pd.DataFrame(plan)
+
 
 
 # --- Parsing chrono et estimation VDOT ---
