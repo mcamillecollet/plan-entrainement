@@ -510,8 +510,11 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
 
     nb_prog = sum(1 for s in range(1, semaines_build + 1) if s not in semaines_allegees)
 
-    if nb_prog > 1 and volume_pic > volume_debut:
-        rate = (volume_pic / volume_debut) ** (1 / (nb_prog - 1)) - 1
+    # Le build plafonne à 90% du pic, seule la semaine Pic atteint 100%
+    volume_build_max = volume_pic * 0.90
+
+    if nb_prog > 1 and volume_build_max > volume_debut:
+        rate = (volume_build_max / volume_debut) ** (1 / (nb_prog - 1)) - 1
         rate = max(0.05, min(0.10, rate))
     else:
         rate = 0.07
@@ -521,12 +524,12 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
 
     for semaine in range(1, duree_semaine + 1):
         if semaine <= semaines_build:
-            # Phase de progression
+            # Phase de progression (toujours sous le volume pic)
             if semaine in semaines_allegees:
                 volume_total = current_volume * 0.70
             else:
                 if prog_count > 0:
-                    current_volume = min(current_volume * (1 + rate), volume_pic)
+                    current_volume = min(current_volume * (1 + rate), volume_build_max)
                 volume_total = current_volume
                 prog_count += 1
         elif semaine == semaine_pic:
