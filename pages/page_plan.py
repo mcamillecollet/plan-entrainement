@@ -55,8 +55,8 @@ def render():
     types_course = ["5km", "10km", "Semi-marathon", "Marathon"]
     durees = list(range(6, 21))
     sorties_options = [2, 3, 4]
-    volumes_debut = list(range(5, 21))
-    volumes_pic = list(range(15, 105, 5))
+    volumes_debut = list(range(5, 35, 5))
+    volumes_pic = list(range(15, 85, 5))
 
     col_a, col_b = st.columns(2)
     with col_a:
@@ -191,7 +191,16 @@ def render():
             mask = plan_df['Type'] == t
             if mask.any():
                 ax2.scatter(plan_df.loc[mask, 'Semaine'], plan_df.loc[mask, 'Volume total (km)'],
-                            color=color, s=40, zorder=5, edgecolors='white', linewidths=1.2, label=t)
+                            color=color, s=50, zorder=5, edgecolors='none', label=t)
+
+        # Bande colorée sous l'axe X pour visualiser les phases
+        y_min = ax2.get_ylim()[0]
+        bar_height = (ax2.get_ylim()[1] - y_min) * 0.04
+        for _, row in plan_df.iterrows():
+            sem = row['Semaine']
+            t = row['Type']
+            if t in colors_type:
+                ax2.bar(sem, bar_height, bottom=y_min, width=0.8, color=colors_type[t], alpha=0.5, zorder=2)
 
         ax2.legend(fontsize=8, loc='upper left', framealpha=0.8)
         ax2.set_xlabel("Semaine", fontsize=10)
