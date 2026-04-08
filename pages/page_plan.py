@@ -44,7 +44,7 @@ def render():
     # Initialiser les valeurs par défaut en session state
     defaults = {
         'p_niveau': 0, 'p_type_course': 0, 'p_chrono_actuel': '',
-        'p_chrono_cible': '', 'p_duree_semaine': 4, 'p_sorties': 1,
+        'p_chrono_cible': '', 'p_duree_semaine': 6, 'p_sorties': 1,
         'p_volume_debut': 5, 'p_volume_pic': 5, 'p_date_course': None
     }
     for k, v in defaults.items():
@@ -53,7 +53,7 @@ def render():
 
     niveaux = ["D\u00e9butant", "Interm\u00e9diaire", "Avanc\u00e9"]
     types_course = ["5km", "10km", "Semi-marathon", "Marathon"]
-    durees = list(range(4, 21))
+    durees = list(range(6, 21))
     sorties_options = [2, 3, 4]
     volumes_debut = list(range(5, 21))
     volumes_pic = list(range(15, 105, 5))
