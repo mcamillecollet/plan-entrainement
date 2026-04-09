@@ -303,6 +303,56 @@ def inject_css():
     color: #2E2E2E !important;
   }
 
+  /* Mois et année dans le header du calendrier */
+  [data-testid="stDateInput"] div[data-baseweb="calendar-header"] select,
+  [data-testid="stDateInput"] div[data-baseweb="calendar-header"] select option,
+  [data-testid="stDateInput"] div[data-baseweb="calendar-header"] div[data-baseweb="select"] *,
+  [data-testid="stDateInput"] div[data-baseweb="calendar-header"] span {
+    color: #2E2E2E !important;
+  }
+
+  /* Flèches de navigation */
+  [data-testid="stDateInput"] div[data-baseweb="calendar-header"] button,
+  [data-testid="stDateInput"] div[data-baseweb="calendar-header"] button svg {
+    color: #2E2E2E !important;
+    fill: #2E2E2E !important;
+  }
+
+  /* Menu déroulant mois/année : fond et texte */
+  [data-testid="stDateInput"] ul[role="listbox"],
+  [data-testid="stDateInput"] div[data-baseweb="menu"],
+  [data-testid="stDateInput"] div[data-baseweb="popover"] ul,
+  [data-testid="stDateInput"] div[data-baseweb="popover"] div[data-baseweb="menu"] {
+    background: #B0B0B0 !important;
+  }
+
+  [data-testid="stDateInput"] ul[role="listbox"] li,
+  [data-testid="stDateInput"] div[data-baseweb="menu"] li,
+  [data-testid="stDateInput"] div[data-baseweb="menu"] ul li,
+  [data-testid="stDateInput"] ul[role="listbox"] li *,
+  [data-testid="stDateInput"] div[data-baseweb="popover"] ul li,
+  [data-testid="stDateInput"] div[data-baseweb="popover"] ul li * {
+    color: #2E2E2E !important;
+    background: transparent !important;
+  }
+
+  [data-testid="stDateInput"] ul[role="listbox"] li:hover,
+  [data-testid="stDateInput"] div[data-baseweb="menu"] li:hover,
+  [data-testid="stDateInput"] div[data-baseweb="popover"] ul li:hover {
+    background: #9E9E9E !important;
+  }
+
+  /* Select natif du calendrier Streamlit */
+  [data-testid="stDateInput"] select {
+    color: #2E2E2E !important;
+    background: transparent !important;
+  }
+
+  [data-testid="stDateInput"] select option {
+    color: #2E2E2E !important;
+    background: #B0B0B0 !important;
+  }
+
   [data-testid="stAlert"] {
     border-radius: 8px;
     border: 1px solid #4A4A4A;
