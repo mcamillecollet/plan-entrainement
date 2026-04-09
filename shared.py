@@ -265,65 +265,48 @@ def inject_css():
     outline: none !important;
   }
 
-  /* Calendrier : fond global (popover rendu en portail hors stDateInput) */
-  div[data-baseweb="popover"] > div {
-    background: #B0B0B0 !important;
-  }
-
-  div[data-baseweb="calendar"] {
-    background: #B0B0B0 !important;
-  }
-
-  /* Tout le texte dans le popover calendrier : mois, année, flèches, jours */
+  /* Tout le texte dans le popover calendrier : mois, année, flèches, jours, chiffres */
   div[data-baseweb="popover"] * {
-    color: #2E2E2E !important;
+    color: #FFFFFF !important;
   }
 
   div[data-baseweb="popover"] svg {
-    fill: #2E2E2E !important;
-    color: #2E2E2E !important;
+    fill: #FFFFFF !important;
+    color: #FFFFFF !important;
   }
 
   div[data-baseweb="calendar"] * {
-    color: #2E2E2E !important;
+    color: #FFFFFF !important;
   }
 
   div[data-baseweb="calendar"] svg {
-    fill: #2E2E2E !important;
-    color: #2E2E2E !important;
+    fill: #FFFFFF !important;
+    color: #FFFFFF !important;
   }
 
   /* Select natif du calendrier */
   div[data-baseweb="popover"] select,
   div[data-baseweb="calendar"] select {
-    color: #2E2E2E !important;
+    color: #FFFFFF !important;
     background: transparent !important;
   }
 
   div[data-baseweb="popover"] select option,
   div[data-baseweb="calendar"] select option {
-    color: #2E2E2E !important;
-    background: #B0B0B0 !important;
+    color: #FFFFFF !important;
   }
 
-  /* Menus déroulants Base Web rendus en portail (hors du conteneur stDateInput) */
-  div[data-baseweb="popover"] ul[role="listbox"],
-  div[data-baseweb="popover"] div[data-baseweb="menu"],
-  div[data-baseweb="popover"] ul[data-baseweb="menu"] {
-    background: #B0B0B0 !important;
-  }
-
+  /* Menus déroulants mois/année */
   div[data-baseweb="popover"] ul[role="listbox"] li,
   div[data-baseweb="popover"] ul[role="listbox"] li *,
   div[data-baseweb="popover"] div[data-baseweb="menu"] li,
   div[data-baseweb="popover"] div[data-baseweb="menu"] li * {
-    color: #2E2E2E !important;
-    background: transparent !important;
+    color: #FFFFFF !important;
   }
 
   div[data-baseweb="popover"] ul[role="listbox"] li:hover,
   div[data-baseweb="popover"] div[data-baseweb="menu"] li:hover {
-    background: #9E9E9E !important;
+    background: rgba(255, 255, 255, 0.15) !important;
   }
 
   [data-testid="stAlert"] {
