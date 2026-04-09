@@ -193,7 +193,7 @@ def render():
         ax2.fill_between(plan_df['Semaine'], plan_df['Volume total (km)'],
                          alpha=0.06, color='#3C3C3C')
 
-        colors_type = {'Under progress': CHART_LINE_ASCENT, 'Cool down': '#B0B0B0', 'Peak': '#CE0058', 'Recovery': COLOR_SECONDARY, 'D-day': '#7AC4B7'}
+        colors_type = {'Under progress': CHART_LINE_ASCENT, 'Cool down': '#B0B0B0', 'Peak': '#CE0058', 'Recovery': COLOR_SECONDARY, 'Race Week': '#7AC4B7'}
         for t, color in colors_type.items():
             mask = plan_df['Type'] == t
             if mask.any():
@@ -228,6 +228,7 @@ def render():
             s = session_style_last if last else session_style
             return f'<div style="{s}"><span style="{name_style}">{name}</span><span style="{km_style}">{km} km</span></div>'
 
+        cards_html = []
         for _, row in plan_df.iterrows():
             sem = int(row['Semaine'])
             sem_type = row['Type']
@@ -254,10 +255,13 @@ def render():
 
             seances_html = "\n".join(rows)
 
-            st.markdown(f"""<div style="background:#3A3A3A; border-left:4px solid {color}; border-radius:8px; padding:1rem 1.2rem; margin-bottom:0.7rem;">
+            cards_html.append(f"""<div style="background:#3A3A3A; border-left:4px solid {color}; border-radius:8px; padding:1rem 1.2rem;">
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
 <span style="font-family:'Outfit',sans-serif; font-weight:600; font-size:1rem; color:#F0F0F0;">Semaine {sem} <span style="font-weight:400; font-size:0.78rem; color:{color}; margin-left:0.5rem; text-transform:uppercase; letter-spacing:0.06em;">{sem_type}</span></span>
 <span style="font-family:'Geist Mono',monospace; font-size:0.85rem; font-weight:500; color:#F0F0F0;">{vol} km</span>
 </div>
 {seances_html}
-</div>""", unsafe_allow_html=True)
+</div>""")
+
+        grid_html = '<div style="display:grid; grid-template-columns:1fr 1fr; gap:0.7rem;">\n' + "\n".join(cards_html) + '\n</div>'
+        st.markdown(grid_html, unsafe_allow_html=True)

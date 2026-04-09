@@ -570,7 +570,7 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic, dur
         elif semaine < duree_semaine:
             sem_type = 'Recovery'
         else:
-            sem_type = 'D-day'
+            sem_type = 'Race Week'
 
         is_long_run = (semaine % 2 == 1)
 
