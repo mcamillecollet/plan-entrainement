@@ -293,6 +293,25 @@ def inject_css():
     color: #2E2E2E !important;
   }
 
+  /* Supprimer cercle et bande noirs (today + selected) */
+  div[data-baseweb="popover"] div[role="gridcell"] > div,
+  div[data-baseweb="popover"] div[role="gridcell"] > button {
+    background-color: transparent !important;
+    background: transparent !important;
+    border-color: transparent !important;
+    outline: none !important;
+    box-shadow: none !important;
+    color: #2E2E2E !important;
+  }
+
+  div[data-baseweb="popover"] div[role="gridcell"] > div::before,
+  div[data-baseweb="popover"] div[role="gridcell"] > div::after,
+  div[data-baseweb="popover"] div[role="gridcell"] > button::before,
+  div[data-baseweb="popover"] div[role="gridcell"] > button::after {
+    display: none !important;
+    background: transparent !important;
+  }
+
   /* Select natif du calendrier */
   div[data-baseweb="popover"] select,
   div[data-baseweb="calendar"] select {
