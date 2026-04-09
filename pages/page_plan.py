@@ -185,9 +185,6 @@ def render():
         )
 
         st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
-        st.markdown('<p class="section-label">Plan d\'entra\u00eenement personnalis\u00e9</p>', unsafe_allow_html=True)
-        st.dataframe(plan_df, use_container_width=True)
-
         st.markdown('<p class="section-label">Volume hebdomadaire</p>', unsafe_allow_html=True)
         fig2, ax2 = plt.subplots(figsize=(11, 3.5))
         style_ax(ax2, fig2)
@@ -218,3 +215,86 @@ def render():
         ax2.xaxis.set_major_locator(MultipleLocator(1))
         fig2.tight_layout()
         st.pyplot(fig2)
+
+        # --- Cartes par semaine ---
+        st.markdown("""
+        <style>
+          .week-session {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0.35rem 0; border-bottom: 1px solid rgba(255,255,255,0.07);
+          }
+          .week-session:last-child { border-bottom: none; }
+          .session-name {
+            font-family: 'Outfit', sans-serif; font-size: 0.85rem;
+            font-weight: 400; color: #E0E0E0;
+          }
+          .session-km {
+            font-family: 'Geist Mono', monospace; font-size: 0.82rem;
+            font-weight: 500; color: #F0F0F0; white-space: nowrap;
+          }
+        </style>
+        """, unsafe_allow_html=True)
+
+        st.markdown('<p class="section-label">D\u00e9tail par semaine</p>', unsafe_allow_html=True)
+
+        phase_labels = {
+            'Under progress': 'Progression',
+            'Cool down': 'All\u00e9g\u00e9e',
+            'Peak': 'Pic',
+            'Recovery': 'Redescente',
+            'D-day': 'Course',
+        }
+
+        for _, row in plan_df.iterrows():
+            sem = int(row['Semaine'])
+            sem_type = row['Type']
+            vol = row['Volume total (km)']
+            color = colors_type.get(sem_type, '#B0B0B0')
+            phase_label = phase_labels.get(sem_type, sem_type)
+
+            # Construire la liste des s\u00e9ances
+            seances_html = ""
+            if sorties_par_semaine == 2:
+                quali = row['Qualitative seuil/VMA (km)']
+                sl = row['Sortie longue ou EF (km)']
+                detail = row['D\u00e9tail sortie longue']
+                seances_html = f"""
+                <div class="week-session"><span class="session-name">Seuil / VMA</span><span class="session-km">{quali} km</span></div>
+                <div class="week-session"><span class="session-name">{detail}</span><span class="session-km">{sl} km</span></div>"""
+            elif sorties_par_semaine == 3:
+                ef = row['EF (km)']
+                quali = row['Qualitative VMA/seuil/c\u00f4tes (km)']
+                sl = row['Sortie longue (km)']
+                as_km = row['dont AS (km)']
+                seances_html = f"""
+                <div class="week-session"><span class="session-name">Endurance fondamentale</span><span class="session-km">{ef} km</span></div>
+                <div class="week-session"><span class="session-name">VMA / Seuil / C\u00f4tes</span><span class="session-km">{quali} km</span></div>
+                <div class="week-session"><span class="session-name">Sortie longue <span style="opacity:0.55; font-size:0.72rem;">(dont AS {as_km} km)</span></span><span class="session-km">{sl} km</span></div>"""
+            else:
+                ef = row['EF (km)']
+                q1 = row['Qualitative 1 VMA (km)']
+                q2 = row['Qualitative 2 seuil/c\u00f4tes (km)']
+                sl = row['Sortie longue (km)']
+                as_km = row['dont AS (km)']
+                seances_html = f"""
+                <div class="week-session"><span class="session-name">Endurance fondamentale</span><span class="session-km">{ef} km</span></div>
+                <div class="week-session"><span class="session-name">VMA</span><span class="session-km">{q1} km</span></div>
+                <div class="week-session"><span class="session-name">Seuil / C\u00f4tes</span><span class="session-km">{q2} km</span></div>
+                <div class="week-session"><span class="session-name">Sortie longue <span style="opacity:0.55; font-size:0.72rem;">(dont AS {as_km} km)</span></span><span class="session-km">{sl} km</span></div>"""
+
+            st.markdown(f"""
+            <div style="background: #3A3A3A; border-left: 4px solid {color}; border-radius: 8px;
+                        padding: 1rem 1.2rem; margin-bottom: 0.7rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
+                <span style="font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 1rem; color: #F0F0F0;">
+                  Semaine {sem}
+                  <span style="font-weight: 400; font-size: 0.78rem; color: {color}; margin-left: 0.5rem;
+                              text-transform: uppercase; letter-spacing: 0.06em;">{phase_label}</span>
+                </span>
+                <span style="font-family: 'Geist Mono', monospace; font-size: 0.85rem; font-weight: 500; color: #F0F0F0;">
+                  {vol} km
+                </span>
+              </div>
+              {seances_html}
+            </div>
+            """, unsafe_allow_html=True)
