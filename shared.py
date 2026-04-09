@@ -273,22 +273,22 @@ def inject_css():
     background: #B0B0B0 !important;
   }
 
-  /* Header calendrier : mois, année, flèches */
-  [data-testid="stDateInput"] div[data-baseweb="calendar-header"] *,
-  [data-testid="stDateInput"] div[data-baseweb="calendar-header"] select,
-  [data-testid="stDateInput"] div[data-baseweb="calendar-header"] select option {
+  /* Tout le texte dans le calendrier : mois, année, jours, flèches */
+  [data-testid="stDateInput"] div[data-baseweb="calendar"] * {
     color: #2E2E2E !important;
   }
 
-  [data-testid="stDateInput"] div[data-baseweb="calendar-header"] button svg,
-  [data-testid="stDateInput"] div[data-baseweb="popover"] button svg,
-  [data-testid="stDateInput"] button[aria-label] svg {
+  [data-testid="stDateInput"] div[data-baseweb="calendar"] svg {
     fill: #2E2E2E !important;
     color: #2E2E2E !important;
   }
 
-  [data-testid="stDateInput"] div[data-baseweb="calendar-header"] button,
-  [data-testid="stDateInput"] div[data-baseweb="popover"] button {
+  [data-testid="stDateInput"] div[data-baseweb="popover"] * {
+    color: #2E2E2E !important;
+  }
+
+  [data-testid="stDateInput"] div[data-baseweb="popover"] svg {
+    fill: #2E2E2E !important;
     color: #2E2E2E !important;
   }
 
@@ -298,19 +298,10 @@ def inject_css():
     color: #FFFFFF !important;
   }
 
-  [data-testid="stDateInput"] div[data-baseweb="calendar"] div[role="gridcell"] div {
-    color: #2E2E2E !important;
-  }
-
-  [data-testid="stDateInput"] div[data-baseweb="calendar"] div[role="row"] div {
-    color: #2E2E2E !important;
-  }
-
   /* Select natif du calendrier */
   [data-testid="stDateInput"] select {
     color: #2E2E2E !important;
     background: transparent !important;
-    -webkit-appearance: none;
   }
 
   [data-testid="stDateInput"] select option {
