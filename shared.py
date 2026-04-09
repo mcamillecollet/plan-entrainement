@@ -273,18 +273,21 @@ def inject_css():
     background: #B0B0B0 !important;
   }
 
-  [data-testid="stDateInput"] div[data-baseweb="calendar"] div[data-baseweb="calendar-header"] *,
-  [data-testid="stDateInput"] div[data-baseweb="popover"] div[data-baseweb="calendar-header"] * {
+  /* Header calendrier : mois, année, flèches */
+  [data-testid="stDateInput"] div[data-baseweb="calendar-header"] *,
+  [data-testid="stDateInput"] div[data-baseweb="calendar-header"] select,
+  [data-testid="stDateInput"] div[data-baseweb="calendar-header"] select option {
     color: #2E2E2E !important;
   }
 
-  [data-testid="stDateInput"] div[data-baseweb="calendar"] button svg,
-  [data-testid="stDateInput"] div[data-baseweb="popover"] button svg {
+  [data-testid="stDateInput"] div[data-baseweb="calendar-header"] button svg,
+  [data-testid="stDateInput"] div[data-baseweb="popover"] button svg,
+  [data-testid="stDateInput"] button[aria-label] svg {
     fill: #2E2E2E !important;
     color: #2E2E2E !important;
   }
 
-  [data-testid="stDateInput"] div[data-baseweb="calendar"] button,
+  [data-testid="stDateInput"] div[data-baseweb="calendar-header"] button,
   [data-testid="stDateInput"] div[data-baseweb="popover"] button {
     color: #2E2E2E !important;
   }
@@ -303,54 +306,36 @@ def inject_css():
     color: #2E2E2E !important;
   }
 
-  /* Mois et année dans le header du calendrier */
-  [data-testid="stDateInput"] div[data-baseweb="calendar-header"] select,
-  [data-testid="stDateInput"] div[data-baseweb="calendar-header"] select option,
-  [data-testid="stDateInput"] div[data-baseweb="calendar-header"] div[data-baseweb="select"] *,
-  [data-testid="stDateInput"] div[data-baseweb="calendar-header"] span {
-    color: #2E2E2E !important;
-  }
-
-  /* Flèches de navigation */
-  [data-testid="stDateInput"] div[data-baseweb="calendar-header"] button,
-  [data-testid="stDateInput"] div[data-baseweb="calendar-header"] button svg {
-    color: #2E2E2E !important;
-    fill: #2E2E2E !important;
-  }
-
-  /* Menu déroulant mois/année : fond et texte */
-  [data-testid="stDateInput"] ul[role="listbox"],
-  [data-testid="stDateInput"] div[data-baseweb="menu"],
-  [data-testid="stDateInput"] div[data-baseweb="popover"] ul,
-  [data-testid="stDateInput"] div[data-baseweb="popover"] div[data-baseweb="menu"] {
-    background: #B0B0B0 !important;
-  }
-
-  [data-testid="stDateInput"] ul[role="listbox"] li,
-  [data-testid="stDateInput"] div[data-baseweb="menu"] li,
-  [data-testid="stDateInput"] div[data-baseweb="menu"] ul li,
-  [data-testid="stDateInput"] ul[role="listbox"] li *,
-  [data-testid="stDateInput"] div[data-baseweb="popover"] ul li,
-  [data-testid="stDateInput"] div[data-baseweb="popover"] ul li * {
-    color: #2E2E2E !important;
-    background: transparent !important;
-  }
-
-  [data-testid="stDateInput"] ul[role="listbox"] li:hover,
-  [data-testid="stDateInput"] div[data-baseweb="menu"] li:hover,
-  [data-testid="stDateInput"] div[data-baseweb="popover"] ul li:hover {
-    background: #9E9E9E !important;
-  }
-
-  /* Select natif du calendrier Streamlit */
+  /* Select natif du calendrier */
   [data-testid="stDateInput"] select {
     color: #2E2E2E !important;
     background: transparent !important;
+    -webkit-appearance: none;
   }
 
   [data-testid="stDateInput"] select option {
     color: #2E2E2E !important;
     background: #B0B0B0 !important;
+  }
+
+  /* Menus déroulants Base Web rendus en portail (hors du conteneur stDateInput) */
+  div[data-baseweb="popover"] ul[role="listbox"],
+  div[data-baseweb="popover"] div[data-baseweb="menu"],
+  div[data-baseweb="popover"] ul[data-baseweb="menu"] {
+    background: #B0B0B0 !important;
+  }
+
+  div[data-baseweb="popover"] ul[role="listbox"] li,
+  div[data-baseweb="popover"] ul[role="listbox"] li *,
+  div[data-baseweb="popover"] div[data-baseweb="menu"] li,
+  div[data-baseweb="popover"] div[data-baseweb="menu"] li * {
+    color: #2E2E2E !important;
+    background: transparent !important;
+  }
+
+  div[data-baseweb="popover"] ul[role="listbox"] li:hover,
+  div[data-baseweb="popover"] div[data-baseweb="menu"] li:hover {
+    background: #9E9E9E !important;
   }
 
   [data-testid="stAlert"] {
