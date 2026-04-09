@@ -265,46 +265,50 @@ def inject_css():
     outline: none !important;
   }
 
-  [data-testid="stDateInput"] div[data-baseweb="popover"] {
+  /* Calendrier : fond global (popover rendu en portail hors stDateInput) */
+  div[data-baseweb="popover"] > div {
     background: #B0B0B0 !important;
   }
 
-  [data-testid="stDateInput"] div[data-baseweb="calendar"] {
+  div[data-baseweb="calendar"] {
     background: #B0B0B0 !important;
   }
 
-  /* Tout le texte dans le calendrier : mois, année, jours, flèches */
-  [data-testid="stDateInput"] div[data-baseweb="calendar"] * {
+  /* Tout le texte dans le popover calendrier : mois, année, flèches, jours */
+  div[data-baseweb="popover"] * {
     color: #2E2E2E !important;
   }
 
-  [data-testid="stDateInput"] div[data-baseweb="calendar"] svg {
+  div[data-baseweb="popover"] svg {
     fill: #2E2E2E !important;
     color: #2E2E2E !important;
   }
 
-  [data-testid="stDateInput"] div[data-baseweb="popover"] * {
+  div[data-baseweb="calendar"] * {
     color: #2E2E2E !important;
   }
 
-  [data-testid="stDateInput"] div[data-baseweb="popover"] svg {
+  div[data-baseweb="calendar"] svg {
     fill: #2E2E2E !important;
     color: #2E2E2E !important;
   }
 
-  [data-testid="stDateInput"] div[data-baseweb="calendar"] div[role="gridcell"] div[data-highlighted="true"],
-  [data-testid="stDateInput"] div[data-baseweb="calendar"] div[role="gridcell"] div[aria-selected="true"] {
+  /* Jour sélectionné */
+  div[data-baseweb="calendar"] div[role="gridcell"] div[data-highlighted="true"],
+  div[data-baseweb="calendar"] div[role="gridcell"] div[aria-selected="true"] {
     background-color: #2E2E2E !important;
     color: #FFFFFF !important;
   }
 
   /* Select natif du calendrier */
-  [data-testid="stDateInput"] select {
+  div[data-baseweb="popover"] select,
+  div[data-baseweb="calendar"] select {
     color: #2E2E2E !important;
     background: transparent !important;
   }
 
-  [data-testid="stDateInput"] select option {
+  div[data-baseweb="popover"] select option,
+  div[data-baseweb="calendar"] select option {
     color: #2E2E2E !important;
     background: #B0B0B0 !important;
   }
