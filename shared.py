@@ -238,7 +238,7 @@ def inject_css():
   [data-testid="stSelectbox"] div[data-baseweb="select"] div,
   [data-testid="stTextInput"] input,
   [data-testid="stDateInput"] input {
-    color: #2E2E2E !important;
+    color: #FFFFFF !important;
   }
 
   [data-testid="stRadio"] div[role="radiogroup"] label {
