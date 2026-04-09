@@ -334,28 +334,6 @@ def inject_css():
 </style>
 """, unsafe_allow_html=True)
 
-    # JS pour forcer les styles du calendrier (les styles inline React ne sont pas overridables en CSS)
-    st.components.v1.html("""
-    <script>
-    (function() {
-      var doc = window.parent.document;
-      function fixCalendarCells() {
-        var cells = doc.querySelectorAll('div[data-baseweb="popover"] div[role="gridcell"] > div, div[data-baseweb="popover"] div[role="gridcell"] > button');
-        cells.forEach(function(el) {
-          el.style.setProperty('background-color', 'transparent', 'important');
-          el.style.setProperty('background', 'transparent', 'important');
-          el.style.setProperty('border-color', 'transparent', 'important');
-          el.style.setProperty('outline', 'none', 'important');
-          el.style.setProperty('box-shadow', 'none', 'important');
-          el.style.setProperty('color', '#2E2E2E', 'important');
-        });
-      }
-      var observer = new MutationObserver(function() { fixCalendarCells(); });
-      observer.observe(doc.body, { childList: true, subtree: true });
-    })();
-    </script>
-    """, height=0)
-
 
 def style_ax(ax, fig):
     """Style partagé pour les graphiques matplotlib."""
