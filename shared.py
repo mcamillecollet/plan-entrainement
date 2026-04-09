@@ -17,6 +17,28 @@ CHART_FILL_ASCENT = "#D04D46"   # Pantone 6047 C
 CHART_FILL_DESCENT = "#5A77B5"  # Pantone 6102 C
 CHART_HIGHLIGHT = "#D04D46"     # Pantone 6047 C
 
+# --- Limites de volume pic (km/semaine) par type de course et niveau ---
+# (min_pic, max_pic) : min = volume minimum en semaine Peak, max = volume maximum
+VOLUME_PIC_LIMITS = {
+    ("5km", "Débutant"):            (10, 20),
+    ("5km", "Intermédiaire"):       (20, 30),
+    ("5km", "Avancé"):              (30, 40),
+    ("10km", "Débutant"):           (20, 30),
+    ("10km", "Intermédiaire"):      (30, 45),
+    ("10km", "Avancé"):             (45, 60),
+    ("Semi-marathon", "Débutant"):  (25, 40),
+    ("Semi-marathon", "Intermédiaire"): (40, 60),
+    ("Semi-marathon", "Avancé"):    (60, 80),
+    ("Marathon", "Débutant"):       (40, 60),
+    ("Marathon", "Intermédiaire"):  (60, 80),
+    ("Marathon", "Avancé"):         (80, 120),
+}
+
+
+def get_volume_pic_range(type_course, niveau):
+    """Retourne (min, max) du volume pic recommandé pour la course et le niveau donnés."""
+    return VOLUME_PIC_LIMITS.get((type_course, niveau), (15, 80))
+
 
 def inject_css():
     """Injecte le CSS partagé dans la page courante."""

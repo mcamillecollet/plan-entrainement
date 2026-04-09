@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 from shared import (inject_css, style_ax, parse_chrono, estimer_vdot,
                     allures_from_vdot, format_pace, generer_plan_personnalise,
+                    get_volume_pic_range,
                     COLOR_PRIMARY, COLOR_SECONDARY,
                     CHART_LINE_ASCENT, CHART_LINE_DESCENT)
 
@@ -55,8 +56,6 @@ def render():
     types_course = ["5km", "10km", "Semi-marathon", "Marathon"]
     durees = list(range(6, 21))
     sorties_options = [2, 3, 4]
-    volumes_debut = list(range(5, 35, 5))
-    volumes_pic = list(range(15, 85, 5))
 
     col_a, col_b = st.columns(2)
     with col_a:
@@ -67,8 +66,19 @@ def render():
     with col_b:
         duree_semaine = st.selectbox("Dur\u00e9e du plan (semaines)", durees, key="p_duree_semaine")
         sorties_par_semaine = st.selectbox("Sorties par semaine", sorties_options, key="p_sorties")
+
+        # Volumes dynamiques selon le niveau et le type de course
+        pic_min, pic_max = get_volume_pic_range(type_course, niveau)
+        volumes_debut = list(range(5, pic_min + 1, 5))
+        volumes_pic = list(range(pic_min, pic_max + 1, 5))
+
+        if st.session_state.get('p_volume_debut') not in volumes_debut:
+            st.session_state['p_volume_debut'] = volumes_debut[0]
+        if st.session_state.get('p_volume_pic') not in volumes_pic:
+            st.session_state['p_volume_pic'] = volumes_pic[0]
+
         volume_debut = st.selectbox("Volume de d\u00e9part (km/semaine)", volumes_debut, key="p_volume_debut")
-        volume_pic = st.selectbox("Volume pic (km/semaine)", volumes_pic, key="p_volume_pic")
+        volume_pic = st.selectbox(f"Volume pic (km/semaine) \u2014 recommand\u00e9 : {pic_min}\u2013{pic_max} km", volumes_pic, key="p_volume_pic")
 
     date_course = st.date_input("Date de la course", value=None, format="DD/MM/YYYY", key="p_date_course")
 
