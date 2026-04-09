@@ -293,25 +293,6 @@ def inject_css():
     color: #2E2E2E !important;
   }
 
-  /* Supprimer cercle et bande noirs (today + selected) */
-  div[data-baseweb="popover"] div[role="gridcell"] > div,
-  div[data-baseweb="popover"] div[role="gridcell"] > button {
-    background-color: transparent !important;
-    background: transparent !important;
-    border-color: transparent !important;
-    outline: none !important;
-    box-shadow: none !important;
-    color: #2E2E2E !important;
-  }
-
-  div[data-baseweb="popover"] div[role="gridcell"] > div::before,
-  div[data-baseweb="popover"] div[role="gridcell"] > div::after,
-  div[data-baseweb="popover"] div[role="gridcell"] > button::before,
-  div[data-baseweb="popover"] div[role="gridcell"] > button::after {
-    display: none !important;
-    background: transparent !important;
-  }
-
   /* Select natif du calendrier */
   div[data-baseweb="popover"] select,
   div[data-baseweb="calendar"] select {
@@ -352,6 +333,28 @@ def inject_css():
   }
 </style>
 """, unsafe_allow_html=True)
+
+    # JS pour forcer les styles du calendrier (les styles inline React ne sont pas overridables en CSS)
+    st.components.v1.html("""
+    <script>
+    (function() {
+      var doc = window.parent.document;
+      function fixCalendarCells() {
+        var cells = doc.querySelectorAll('div[data-baseweb="popover"] div[role="gridcell"] > div, div[data-baseweb="popover"] div[role="gridcell"] > button');
+        cells.forEach(function(el) {
+          el.style.setProperty('background-color', 'transparent', 'important');
+          el.style.setProperty('background', 'transparent', 'important');
+          el.style.setProperty('border-color', 'transparent', 'important');
+          el.style.setProperty('outline', 'none', 'important');
+          el.style.setProperty('box-shadow', 'none', 'important');
+          el.style.setProperty('color', '#2E2E2E', 'important');
+        });
+      }
+      var observer = new MutationObserver(function() { fixCalendarCells(); });
+      observer.observe(doc.body, { childList: true, subtree: true });
+    })();
+    </script>
+    """, height=0)
 
 
 def style_ax(ax, fig):
