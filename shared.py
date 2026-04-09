@@ -293,28 +293,38 @@ def inject_css():
     color: #2E2E2E !important;
   }
 
-  /* Jour sélectionné : rond gris clair transparent */
-  div[data-baseweb="calendar"] div[role="gridcell"] div[data-highlighted="true"],
-  div[data-baseweb="calendar"] div[role="gridcell"] div[aria-selected="true"] {
-    background-color: rgba(0, 0, 0, 0.15) !important;
-    color: #2E2E2E !important;
-  }
-
-  /* Supprimer la barre noire (range highlight) */
-  div[data-baseweb="calendar"] div[role="gridcell"] div {
+  /* Reset tous les fonds de cellules du calendrier */
+  div[data-baseweb="popover"] div[role="gridcell"],
+  div[data-baseweb="popover"] div[role="gridcell"] > div,
+  div[data-baseweb="popover"] div[role="gridcell"] div,
+  div[data-baseweb="popover"] div[role="gridcell"] button,
+  div[data-baseweb="calendar"] div[role="gridcell"],
+  div[data-baseweb="calendar"] div[role="gridcell"] > div,
+  div[data-baseweb="calendar"] div[role="gridcell"] div,
+  div[data-baseweb="calendar"] div[role="gridcell"] button {
     background-color: transparent !important;
-  }
-
-  /* Supprimer le cercle rouge (today / focus) */
-  div[data-baseweb="calendar"] div[role="gridcell"] div::after,
-  div[data-baseweb="calendar"] div[role="gridcell"] div::before {
-    display: none !important;
-  }
-
-  div[data-baseweb="calendar"] div[role="gridcell"] div {
+    background: transparent !important;
     border-color: transparent !important;
     outline: none !important;
     box-shadow: none !important;
+  }
+
+  /* Supprimer cercle rouge et pseudo-éléments */
+  div[data-baseweb="popover"] div[role="gridcell"] *::after,
+  div[data-baseweb="popover"] div[role="gridcell"] *::before,
+  div[data-baseweb="calendar"] div[role="gridcell"] *::after,
+  div[data-baseweb="calendar"] div[role="gridcell"] *::before {
+    display: none !important;
+  }
+
+  /* Jour sélectionné : rond gris clair */
+  div[data-baseweb="popover"] div[role="gridcell"] div[aria-selected="true"],
+  div[data-baseweb="popover"] div[role="gridcell"] div[data-highlighted="true"],
+  div[data-baseweb="calendar"] div[role="gridcell"] div[aria-selected="true"],
+  div[data-baseweb="calendar"] div[role="gridcell"] div[data-highlighted="true"] {
+    background-color: rgba(0, 0, 0, 0.15) !important;
+    border-radius: 50% !important;
+    color: #2E2E2E !important;
   }
 
   /* Select natif du calendrier */
