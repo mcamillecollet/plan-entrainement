@@ -1,3 +1,4 @@
+from datetime import date
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -5,10 +6,13 @@ from matplotlib.ticker import MultipleLocator
 from utils import (
     inject_css, style_ax, parse_chrono, estimer_vdot,
     allures_from_vdot, format_pace, generer_plan_personnalise,
-    get_volume_pic_range,
+    get_volume_pic_range, deduire_niveau,
     COLOR_PRIMARY, COLOR_SECONDARY,
     CHART_LINE_ASCENT, CHART_LINE_DESCENT
 )
+
+DISTANCES_MAP = {"5km": 5, "10km": 10, "Semi-marathon": 21.0975, "Marathon": 42.195}
+DUREE_PAR_DEFAUT = 12
 
 
 def render():
@@ -44,137 +48,166 @@ def render():
     st.markdown('<p class="section-label">Param\u00e8tres du plan d\'entra\u00eenement</p>', unsafe_allow_html=True)
 
     defaults = {
-        'p_niveau': 0, 'p_type_course': 0, 'p_chrono_actuel': '',
-        'p_chrono_cible': '', 'p_duree_semaine': 6, 'p_sorties': 1,
-        'p_volume_debut': 5, 'p_volume_pic': 5, 'p_date_course': None
+        'p_type_course': 0, 'p_chrono_actuel': '', 'p_chrono_cible': '',
+        'p_sorties': 1, 'p_date_course': None
     }
     for k, v in defaults.items():
         if k not in st.session_state:
             st.session_state[k] = v
 
-    niveaux = ["D\u00e9butant", "Interm\u00e9diaire", "Avanc\u00e9"]
-    types_course = ["5km", "10km", "Semi-marathon", "Marathon"]
-    durees = list(range(6, 21))
+    types_course = list(DISTANCES_MAP.keys())
     sorties_options = [2, 3, 4]
 
     col_a, col_b = st.columns(2)
     with col_a:
-        niveau = st.selectbox("Niveau", niveaux, key="p_niveau")
-        type_course = st.selectbox("Type de course", types_course, key="p_type_course")
+        type_course = st.selectbox("Distance cible", types_course, key="p_type_course")
         chrono_actuel = st.text_input("Chrono actuel (ex: 1h45)", key="p_chrono_actuel")
-        chrono_cible = st.text_input("Chrono cible (ex: 1h30)", key="p_chrono_cible")
+        chrono_cible = st.text_input("Chrono vis\u00e9 (ex: 1h30)", key="p_chrono_cible")
     with col_b:
-        duree_semaine = st.selectbox("Dur\u00e9e du plan (semaines)", durees, key="p_duree_semaine")
         sorties_par_semaine = st.selectbox("Sorties par semaine", sorties_options, key="p_sorties")
+        date_course = st.date_input("Date de la course (optionnelle)", value=None, format="DD/MM/YYYY", key="p_date_course")
 
+    # --- Dérivation auto : VDOT → niveau → volumes + durée à partir de la date ---
+    dist_km = DISTANCES_MAP[type_course]
+    temps_actuel = parse_chrono(chrono_actuel) if chrono_actuel else None
+    temps_cible = parse_chrono(chrono_cible) if chrono_cible else None
+
+    if chrono_actuel and not temps_actuel:
+        st.warning("Format du chrono actuel non reconnu. Exemples : 1h45, 45:30, 3h30m, 25m30")
+    if chrono_cible and not temps_cible:
+        st.warning("Format du chrono vis\u00e9 non reconnu. Exemples : 1h45, 45:30, 3h30m, 25m30")
+
+    vdot_actuel = estimer_vdot(dist_km, temps_actuel) if temps_actuel else None
+    niveau = deduire_niveau(vdot_actuel) if vdot_actuel else None
+
+    if niveau:
         pic_min, pic_max = get_volume_pic_range(type_course, niveau)
-        volumes_debut = list(range(5, pic_min + 1, 5))
-        volumes_pic = list(range(pic_min, pic_max + 1, 5))
+        volume_pic = pic_max
+        volume_debut = max(5, pic_min // 2)
+    else:
+        pic_min = pic_max = volume_debut = volume_pic = None
 
-        if st.session_state.get('p_volume_debut') not in volumes_debut:
-            st.session_state['p_volume_debut'] = volumes_debut[0]
-        if st.session_state.get('p_volume_pic') not in volumes_pic:
-            st.session_state['p_volume_pic'] = volumes_pic[0]
+    if date_course:
+        jours_restants = (date_course - date.today()).days
+        if jours_restants <= 0:
+            st.warning("La date de course est pass\u00e9e ou aujourd'hui : plan par d\u00e9faut de 12 semaines.")
+            duree_semaine = DUREE_PAR_DEFAUT
+        else:
+            duree_semaine = max(6, min(20, jours_restants // 7))
+    else:
+        duree_semaine = DUREE_PAR_DEFAUT
 
-        volume_debut = st.selectbox("Volume de d\u00e9part (km/semaine)", volumes_debut, key="p_volume_debut")
-        volume_pic = st.selectbox(f"Volume pic (km/semaine) \u2014 recommand\u00e9 : {pic_min}\u2013{pic_max} km", volumes_pic, key="p_volume_pic")
-
-    date_course = st.date_input("Date de la course", value=None, format="DD/MM/YYYY", key="p_date_course")
+    # --- Récapitulatif des paramètres dérivés ---
+    if niveau:
+        st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
+        st.markdown('<p class="section-label">Param\u00e8tres d\u00e9duits automatiquement</p>', unsafe_allow_html=True)
+        col_r1, col_r2, col_r3 = st.columns(3)
+        with col_r1:
+            st.markdown(f"""
+            <div class="stat-card">
+              <span class="stat-label">Niveau estim\u00e9</span>
+              <span class="stat-value">{niveau}</span>
+            </div>
+            """, unsafe_allow_html=True)
+        with col_r2:
+            st.markdown(f"""
+            <div class="stat-card">
+              <span class="stat-label">Plan sur</span>
+              <span class="stat-value">{duree_semaine} <span class="stat-unit">semaines</span></span>
+            </div>
+            """, unsafe_allow_html=True)
+        with col_r3:
+            st.markdown(f"""
+            <div class="stat-card">
+              <span class="stat-label">Volume pic</span>
+              <span class="stat-value">{volume_pic} <span class="stat-unit">km/sem</span></span>
+            </div>
+            """, unsafe_allow_html=True)
 
     # --- Estimation VDOT et allures ---
-    if chrono_actuel or chrono_cible:
-        distances_map = {"5km": 5, "10km": 10, "Semi-marathon": 21.0975, "Marathon": 42.195}
-        dist_km = distances_map[type_course]
+    if temps_actuel or temps_cible:
+        st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
+        st.markdown('<p class="section-label">VDOT & allures d\'entra\u00eenement</p>', unsafe_allow_html=True)
 
-        temps_actuel = parse_chrono(chrono_actuel) if chrono_actuel else None
-        temps_cible = parse_chrono(chrono_cible) if chrono_cible else None
+        sections = []
+        if temps_actuel:
+            sections.append(("Niveau actuel", temps_actuel, vdot_actuel, COLOR_PRIMARY))
+        if temps_cible:
+            vdot_cible = estimer_vdot(dist_km, temps_cible)
+            sections.append(("Niveau vis\u00e9", temps_cible, vdot_cible, COLOR_SECONDARY))
 
-        if chrono_actuel and not temps_actuel:
-            st.warning("Format du chrono actuel non reconnu. Exemples : 1h45, 45:30, 3h30m, 25m30")
-        if chrono_cible and not temps_cible:
-            st.warning("Format du chrono cible non reconnu. Exemples : 1h45, 45:30, 3h30m, 25m30")
+        if temps_actuel and temps_cible:
+            col_actuel, col_cible = st.columns(2)
+            cols = [col_actuel, col_cible]
+        else:
+            cols = [st.container()]
 
-        if temps_actuel or temps_cible:
-            st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
-            st.markdown('<p class="section-label">Estimation du niveau & allures d\'entra\u00eenement</p>', unsafe_allow_html=True)
+        for idx, (label, temps, vdot, color) in enumerate(sections):
+            with cols[idx]:
+                vitesse_kmh = round(dist_km / (temps / 60), 1)
+                allure_moy = format_pace(temps / dist_km)
+                st.markdown(f"""
+                <p style="font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 1.05rem;
+                          color: {color}; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                  {label}
+                </p>
+                <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                  <div class="stat-card" style="flex: 1; min-width: 120px;">
+                    <span class="stat-label">VDOT estim\u00e9</span>
+                    <span class="stat-value">{vdot}</span>
+                  </div>
+                  <div class="stat-card" style="flex: 1; min-width: 120px;">
+                    <span class="stat-label">Vitesse moy.</span>
+                    <span class="stat-value">{vitesse_kmh} <span class="stat-unit">km/h</span></span>
+                  </div>
+                  <div class="stat-card" style="flex: 1; min-width: 120px;">
+                    <span class="stat-label">Allure moy.</span>
+                    <span class="stat-value">{allure_moy} <span class="stat-unit">/km</span></span>
+                  </div>
+                </div>
+                """, unsafe_allow_html=True)
 
-            sections = []
-            if temps_actuel:
-                vdot_actuel = estimer_vdot(dist_km, temps_actuel)
-                sections.append(("Niveau actuel", temps_actuel, vdot_actuel, COLOR_PRIMARY))
-            if temps_cible:
-                vdot_cible = estimer_vdot(dist_km, temps_cible)
-                sections.append(("Niveau cible", temps_cible, vdot_cible, COLOR_SECONDARY))
+        if temps_actuel and temps_cible:
+            col_z1, col_z2 = st.columns(2)
+            cols_zones = [col_z1, col_z2]
+        else:
+            cols_zones = [st.container()]
 
-            if temps_actuel and temps_cible:
-                col_actuel, col_cible = st.columns(2)
-                cols = [col_actuel, col_cible]
-            else:
-                cols = [st.container()]
-
-            for idx, (label, temps, vdot, color) in enumerate(sections):
-                with cols[idx]:
-                    vitesse_kmh = round(dist_km / (temps / 60), 1)
-                    allure_moy = format_pace(temps / dist_km)
+        for idx, (label, temps, vdot, color) in enumerate(sections):
+            with cols_zones[idx]:
+                allures = allures_from_vdot(vdot)
+                st.markdown(f'<p class="section-label">Zones d\'allure \u2013 {label}</p>', unsafe_allow_html=True)
+                for nom, (pace_fast, pace_slow) in allures.items():
+                    vitesse_fast = round(60 / pace_fast, 1) if pace_fast else None
+                    vitesse_slow = round(60 / pace_slow, 1) if pace_slow else None
+                    vitesse_str = f"{vitesse_slow} \u2013 {vitesse_fast}" if vitesse_slow and vitesse_fast else "\u2014"
                     st.markdown(f"""
-                    <p style="font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 1.05rem;
-                              color: {color}; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em;">
-                      {label}
-                    </p>
-                    <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
-                      <div class="stat-card" style="flex: 1; min-width: 120px;">
-                        <span class="stat-label">VDOT estim\u00e9</span>
-                        <span class="stat-value">{vdot}</span>
-                      </div>
-                      <div class="stat-card" style="flex: 1; min-width: 120px;">
-                        <span class="stat-label">Vitesse moy.</span>
-                        <span class="stat-value">{vitesse_kmh} <span class="stat-unit">km/h</span></span>
-                      </div>
-                      <div class="stat-card" style="flex: 1; min-width: 120px;">
-                        <span class="stat-label">Allure moy.</span>
-                        <span class="stat-value">{allure_moy} <span class="stat-unit">/km</span></span>
-                      </div>
+                    <div style="background: {color}; border: 1px solid #999; border-radius: 8px;
+                                padding: 0.5rem 0.8rem; margin-bottom: 0.5rem;
+                                display: flex; justify-content: space-between; align-items: center;
+                                flex-wrap: nowrap; gap: 0.3rem;">
+                      <span style="font-family: 'Outfit', sans-serif; font-weight: 500; color: #FFF; flex: 2;
+                                  font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        {nom}
+                      </span>
+                      <span style="font-family: 'Geist Mono', monospace; color: #FFF; flex: 1;
+                                  text-align: center; font-size: 0.78rem; white-space: nowrap;">
+                        {format_pace(pace_fast)}\u2013{format_pace(pace_slow)} /km
+                      </span>
+                      <span style="font-family: 'Geist Mono', monospace; color: #FFF; flex: 1;
+                                  text-align: right; font-size: 0.78rem; white-space: nowrap;">
+                        {vitesse_str} km/h
+                      </span>
                     </div>
                     """, unsafe_allow_html=True)
-
-            if temps_actuel and temps_cible:
-                col_z1, col_z2 = st.columns(2)
-                cols_zones = [col_z1, col_z2]
-            else:
-                cols_zones = [st.container()]
-
-            for idx, (label, temps, vdot, color) in enumerate(sections):
-                with cols_zones[idx]:
-                    allures = allures_from_vdot(vdot)
-                    st.markdown(f'<p class="section-label">Zones d\'allure \u2013 {label}</p>', unsafe_allow_html=True)
-                    for nom, (pace_fast, pace_slow) in allures.items():
-                        vitesse_fast = round(60 / pace_fast, 1) if pace_fast else None
-                        vitesse_slow = round(60 / pace_slow, 1) if pace_slow else None
-                        vitesse_str = f"{vitesse_slow} \u2013 {vitesse_fast}" if vitesse_slow and vitesse_fast else "\u2014"
-                        st.markdown(f"""
-                        <div style="background: {color}; border: 1px solid #999; border-radius: 8px;
-                                    padding: 0.5rem 0.8rem; margin-bottom: 0.5rem;
-                                    display: flex; justify-content: space-between; align-items: center;
-                                    flex-wrap: nowrap; gap: 0.3rem;">
-                          <span style="font-family: 'Outfit', sans-serif; font-weight: 500; color: #FFF; flex: 2;
-                                      font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                            {nom}
-                          </span>
-                          <span style="font-family: 'Geist Mono', monospace; color: #FFF; flex: 1;
-                                      text-align: center; font-size: 0.78rem; white-space: nowrap;">
-                            {format_pace(pace_fast)}\u2013{format_pace(pace_slow)} /km
-                          </span>
-                          <span style="font-family: 'Geist Mono', monospace; color: #FFF; flex: 1;
-                                      text-align: right; font-size: 0.78rem; white-space: nowrap;">
-                            {vitesse_str} km/h
-                          </span>
-                        </div>
-                        """, unsafe_allow_html=True)
-            st.markdown("")
+        st.markdown("")
 
     # --- Génération du plan ---
     st.markdown("")
-    if st.button("G\u00e9n\u00e9rer le plan d'entra\u00eenement"):
+    can_generate = niveau is not None
+    if not can_generate:
+        st.info("Renseigne ton **chrono actuel** pour activer la g\u00e9n\u00e9ration du plan.")
+    if st.button("G\u00e9n\u00e9rer le plan d'entra\u00eenement", disabled=not can_generate):
         d_plus = analyse['D_plus_m'] if analyse else 0
         plan_df = generer_plan_personnalise(
             niveau, type_course, volume_debut, volume_pic,

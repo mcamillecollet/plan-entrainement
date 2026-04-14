@@ -49,6 +49,23 @@ def estimer_vdot(distance_km, temps_minutes):
     return round(vdot, 1)
 
 
+def deduire_niveau(vdot):
+    """
+    Déduit un niveau (Débutant / Intermédiaire / Avancé) à partir d'un VDOT.
+    Seuils alignés sur les tables Jack Daniels :
+        VDOT < 40 : Débutant       (≈ 5 km > 25', 10 km > 52')
+        40 ≤ VDOT < 50 : Intermédiaire (≈ 5 km 20–25', 10 km 42–52')
+        VDOT ≥ 50 : Avancé         (≈ 5 km < 20', 10 km < 42')
+    """
+    if vdot is None:
+        return None
+    if vdot < 40:
+        return "Débutant"
+    if vdot < 50:
+        return "Intermédiaire"
+    return "Avancé"
+
+
 def allures_from_vdot(vdot):
     """
     Calcule les zones d'allure d'entraînement (min/km) à partir d'un VDOT.
