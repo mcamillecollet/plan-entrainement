@@ -15,4 +15,4 @@ from utils.constants import (
 from utils.styles import inject_css, style_ax
 from utils.gpx import analyser_gpx
 from utils.vdot import parse_chrono, estimer_vdot, allures_from_vdot, format_pace, deduire_niveau
-from utils.plan import generer_plan_personnalise, get_volume_pic_range
+from utils.plan import generer_plan_personnalise, get_volume_pic_range, deriver_volumes

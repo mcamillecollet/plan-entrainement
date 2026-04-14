@@ -26,5 +26,5 @@ VOLUME_PIC_LIMITS = {
     ("Semi-marathon", "Avancé"):        (60, 80),
     ("Marathon", "Débutant"):           (40, 60),
     ("Marathon", "Intermédiaire"):      (60, 80),
-    ("Marathon", "Avancé"):             (80, 120),
+    ("Marathon", "Avancé"):             (70, 80),
 }

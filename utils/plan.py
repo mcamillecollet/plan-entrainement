@@ -9,6 +9,25 @@ def get_volume_pic_range(type_course, niveau):
     return VOLUME_PIC_LIMITS.get((type_course, niveau), (15, 80))
 
 
+def deriver_volumes(type_course, niveau, sorties_par_semaine, sorties_options):
+    """
+    Dérive (volume_debut, volume_pic) en km/semaine à partir :
+    - de la fourchette VOLUME_PIC_LIMITS[(type, niveau)]
+    - de la position de `sorties_par_semaine` dans `sorties_options`
+      (plus de sorties → plus de volume, interpolation linéaire entre min et max)
+    - d'un volume de départ à 60 % du pic (plancher 5 km).
+    """
+    pic_min, pic_max = get_volume_pic_range(type_course, niveau)
+    n_min, n_max = sorties_options[0], sorties_options[-1]
+    if n_max > n_min:
+        ratio = (sorties_par_semaine - n_min) / (n_max - n_min)
+    else:
+        ratio = 0.5
+    volume_pic = round(pic_min + ratio * (pic_max - pic_min))
+    volume_debut = max(5, round(volume_pic * 0.60))
+    return volume_debut, volume_pic
+
+
 def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic,
                               duree_semaine, sorties_par_semaine, D_plus):
     """

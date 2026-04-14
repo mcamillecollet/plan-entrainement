@@ -6,7 +6,7 @@ from matplotlib.ticker import MultipleLocator
 from utils import (
     inject_css, style_ax, parse_chrono, estimer_vdot,
     allures_from_vdot, format_pace, generer_plan_personnalise,
-    get_volume_pic_range, deduire_niveau,
+    deduire_niveau, deriver_volumes,
     COLOR_PRIMARY, COLOR_SECONDARY,
     CHART_LINE_ASCENT, CHART_LINE_DESCENT
 )
@@ -89,11 +89,11 @@ def render():
     niveau = deduire_niveau(vdot_actuel) if vdot_actuel else None
 
     if niveau:
-        pic_min, pic_max = get_volume_pic_range(type_course, niveau)
-        volume_pic = pic_max
-        volume_debut = max(5, pic_min // 2)
+        volume_debut, volume_pic = deriver_volumes(
+            type_course, niveau, sorties_par_semaine, sorties_options
+        )
     else:
-        pic_min = pic_max = volume_debut = volume_pic = None
+        volume_debut = volume_pic = None
 
     if date_course:
         jours_restants = (date_course - date.today()).days
