@@ -48,12 +48,12 @@ def _median_pace(allures, zone_name):
 #   - retour au calme = 0.5 km (constant)
 #   - échauffement    = variable, absorbe le résidu pour atteindre km_total
 #   - corps           = pattern choisi en fonction d'une cible body_target
-#                       = km_total - 1.5 - 0.5 (plancher à 1.0 km).
+#                       = km_total - 1.0 - 0.5 (plancher à 1.0 km).
 # Les patterns renvoient le km réellement couvert par le corps afin que la fonction
 # appelante calcule un échauffement cohérent (`ech_km = km_total - actual_body - 0.5`).
 
 _COOLDOWN_KM = 0.5
-_DEFAULT_WARMUP_KM = 1.5
+_DEFAULT_WARMUP_KM = 1.0
 _MIN_WARMUP_KM = 1.0
 
 
