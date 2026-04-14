@@ -40,6 +40,157 @@ def _median_pace(allures, zone_name):
     return (pace_fast + pace_slow) / 2
 
 
+# -------------------- Patterns adaptatifs par type de séance --------------------
+#
+# Principe : le volume annoncé dans le titre (km_total) doit correspondre au cumul
+# réel échauffement + corps + retour au calme. Pour une séance de qualité (VMA /
+# Seuil / AS / Côtes) on fixe :
+#   - retour au calme = 0.5 km (constant)
+#   - échauffement    = variable, absorbe le résidu pour atteindre km_total
+#   - corps           = pattern choisi en fonction d'une cible body_target
+#                       = km_total - 1.5 - 0.5 (plancher à 1.0 km).
+# Les patterns renvoient le km réellement couvert par le corps afin que la fonction
+# appelante calcule un échauffement cohérent (`ech_km = km_total - actual_body - 0.5`).
+
+_COOLDOWN_KM = 0.5
+_DEFAULT_WARMUP_KM = 1.5
+_MIN_WARMUP_KM = 1.0
+
+
+def _body_target(km):
+    """Cible de volume pour le corps d'une séance de qualité (plancher 1.0 km)."""
+    return max(1.0, round(km - _DEFAULT_WARMUP_KM - _COOLDOWN_KM, 1))
+
+
+def _warmup_km(km, actual_body_km):
+    """Échauffement absorbant le résidu, avec un plancher à 1.0 km."""
+    return max(_MIN_WARMUP_KM, round(km - actual_body_km - _COOLDOWN_KM, 1))
+
+
+def _pattern_vma(body_target):
+    """
+    Pattern VMA adapté au volume de corps visé. Retourne (label, detail, actual_km).
+    Les tailles de répétition sont choisies pour rester physiologiquement pertinentes :
+    200 m pour des séances très courtes, 1500 m pour les longues.
+    """
+    if body_target <= 2.0:
+        n = max(6, round(body_target * 5))
+        return (
+            f"{n} × 200 m",
+            "récup : 1 min trot entre les répétitions",
+            round(n * 0.2, 1),
+        )
+    if body_target <= 4.0:
+        n = max(5, round(body_target * 2.5))
+        return (
+            f"{n} × 400 m",
+            "récup : 1 min trot entre les répétitions",
+            round(n * 0.4, 1),
+        )
+    if body_target <= 7.5:
+        n = max(4, round(body_target))
+        return (
+            f"{n} × 1000 m",
+            "récup : 2 min trot entre les répétitions",
+            round(n * 1.0, 1),
+        )
+    n = max(5, round(body_target / 1.5))
+    return (
+        f"{n} × 1500 m",
+        "récup : 2 min 30 trot entre les répétitions",
+        round(n * 1.5, 1),
+    )
+
+
+def _pattern_seuil(body_target):
+    """
+    Pattern Seuil/Tempo adapté au volume visé. Retourne
+    (label, detail, zone_name, allure_display, actual_km).
+    Le corps couvre exactement body_target (rep_km = body_target / nb_reps, arrondi).
+    """
+    if body_target <= 3.0:
+        rep_km = round(body_target / 2, 1)
+        actual = round(2 * rep_km, 1)
+        return (
+            f"2 × {rep_km:.1f} km à allure tempo",
+            "récup : 2 min trot entre les blocs",
+            ZONE_TEMPO,
+            "Tempo",
+            actual,
+        )
+    if body_target <= 6.0:
+        rep_km = round(body_target / 3, 1)
+        actual = round(3 * rep_km, 1)
+        return (
+            f"3 × {rep_km:.1f} km à allure seuil",
+            "récup : 2 min trot entre les blocs",
+            ZONE_SEUIL,
+            LABELS[SEUIL],
+            actual,
+        )
+    rep_km = round(body_target / 2, 1)
+    actual = round(2 * rep_km, 1)
+    return (
+        f"2 × {rep_km:.1f} km à allure seuil",
+        "récup : 3 min trot entre les blocs",
+        ZONE_SEUIL,
+        LABELS[SEUIL],
+        actual,
+    )
+
+
+def _pattern_as(body_target, race_type):
+    """
+    Pattern allure spécifique adapté au volume visé et au type de course.
+    Retourne (label, detail, actual_km).
+    """
+    if race_type == "5km":
+        rep_km = round(body_target / 3, 1)
+        actual = round(3 * rep_km, 1)
+        return (
+            f"3 × {rep_km:.1f} km à allure 5K",
+            "récup : 1 min trot entre les blocs",
+            actual,
+        )
+    if race_type == "10km":
+        rep_km = round(body_target / 2, 1)
+        actual = round(2 * rep_km, 1)
+        return (
+            f"2 × {rep_km:.1f} km à allure 10K",
+            "récup : 2 min trot entre les blocs",
+            actual,
+        )
+    if race_type == "Semi-marathon":
+        rep_km = round(body_target / 2, 1)
+        actual = round(2 * rep_km, 1)
+        return (
+            f"2 × {rep_km:.1f} km à allure semi",
+            "récup : 3 min trot entre les blocs",
+            actual,
+        )
+    # Marathon : bloc unique continu
+    body_km = round(body_target, 1)
+    return (
+        f"1 × {body_km:.1f} km continus à allure marathon",
+        "bloc unique, régularité du pacing",
+        body_km,
+    )
+
+
+def _pattern_cotes(body_target):
+    """
+    Pattern côtes adapté au volume visé. Chaque répétition cumule ~0.3 km
+    (montée 45 s + descente trottée/marchée). Plage de répétitions 6–12.
+    Retourne (label, detail, actual_km).
+    """
+    n = max(6, min(12, round(body_target / 0.3)))
+    return (
+        f"{n} × 45 s en côte",
+        "effort puissant, récup en descente trottée ou marchée",
+        round(n * 0.3, 1),
+    )
+
+
 def generer_seance_detaillee(seance, vdot, race_type, phase_group):
     """
     Point d'entrée principal : retourne la structure détaillée d'une séance.
@@ -125,9 +276,7 @@ def _seance_sl(seance, km, km_as, allures):
 
 
 def _seance_vma(seance, km, allures, phase_group):
-    ech_km = 1.5
-    retour_km = 0.5
-    km_body = max(0.5, round(km - ech_km - retour_km, 1))
+    retour_km = _COOLDOWN_KM
 
     # Race week : stimulus court et non traumatisant, quel que soit le volume.
     # On pad l'échauffement pour absorber le volume excédentaire (rien ne sert de raccourcir
@@ -135,21 +284,12 @@ def _seance_vma(seance, km, allures, phase_group):
     if phase_group == PHASE_RACE_WEEK:
         body_label = "6 × 200 m"
         body_detail = "récup : 1 min marche/trot — effort vif mais non maximal"
-        body_km = 1.2
-        ech_km = max(1.5, round(km - body_km - retour_km, 1))
-    # Choix du motif en fonction du volume de travail
-    elif km_body <= 2.0:
-        pattern_reps = 8 if phase_group != PHASE_TAPER else 6
-        body_label = f"{pattern_reps} × 30 s vite / 30 s trot"
-        body_detail = "récup : trot actif, même durée que l'effort"
-    elif km_body <= 3.5:
-        pattern_reps = 10 if phase_group != PHASE_TAPER else 6
-        body_label = f"{pattern_reps} × 400 m"
-        body_detail = "récup : 1 min trot entre les répétitions"
+        actual_body_km = 1.2
     else:
-        pattern_reps = 6 if phase_group != PHASE_TAPER else 4
-        body_label = f"{pattern_reps} × 1000 m"
-        body_detail = "récup : 2 min trot entre les répétitions"
+        body_target = _body_target(km)
+        body_label, body_detail, actual_body_km = _pattern_vma(body_target)
+
+    ech_km = _warmup_km(km, actual_body_km)
 
     blocs = [
         {
@@ -181,32 +321,21 @@ def _seance_vma(seance, km, allures, phase_group):
 
 
 def _seance_seuil(seance, km, allures, phase_group):
-    ech_km = 1.5
-    retour_km = 1.0
-    km_body = max(1.0, round(km - ech_km - retour_km, 1))
-
-    if km_body <= 4:
-        body_label = "2 × 10 min à allure tempo"
-        body_detail = "récup : 2 min trot entre les blocs"
-        zone = ZONE_TEMPO
-        allure_display = "Tempo"
-    elif km_body <= 7:
-        body_label = "3 × 8 min à allure seuil"
-        body_detail = "récup : 2 min trot entre les blocs"
-        zone = ZONE_SEUIL
-        allure_display = LABELS[SEUIL]
-    else:
-        body_label = "2 × 15 min à allure seuil"
-        body_detail = "récup : 3 min trot entre les blocs"
-        zone = ZONE_SEUIL
-        allure_display = LABELS[SEUIL]
+    retour_km = _COOLDOWN_KM
+    body_target = _body_target(km)
 
     if phase_group == PHASE_TAPER:
-        # En taper : corps raccourci, 1 bloc unique.
-        body_label = "1 × 10 min à allure tempo"
+        # En taper : un bloc tempo unique, effort contrôlé, corps = body_target complet.
+        rep_km = round(body_target, 1)
+        body_label = f"1 × {rep_km:.1f} km à allure tempo"
         body_detail = "effort contrôlé, pas de dernière accélération"
         zone = ZONE_TEMPO
         allure_display = "Tempo"
+        actual_body_km = rep_km
+    else:
+        body_label, body_detail, zone, allure_display, actual_body_km = _pattern_seuil(body_target)
+
+    ech_km = _warmup_km(km, actual_body_km)
 
     blocs = [
         {
@@ -238,8 +367,7 @@ def _seance_seuil(seance, km, allures, phase_group):
 
 
 def _seance_as(seance, km, race_type, allures, phase_group):
-    ech_km = 1.5
-    retour_km = 1.0
+    retour_km = _COOLDOWN_KM
 
     # Race week : corps très court, juste un rappel d'allure cible.
     # L'échauffement absorbe le volume excédentaire (on garde une sortie "normale" en km).
@@ -247,33 +375,24 @@ def _seance_as(seance, km, race_type, allures, phase_group):
         if race_type == "5km":
             body_label = "3 × 500 m à allure 5K"
             body_detail = "récup : 1 min trot — rappel d'allure"
-            body_km = 1.5
+            actual_body_km = 1.5
         elif race_type == "10km":
             body_label = "2 × 1 km à allure 10K"
             body_detail = "récup : 2 min trot — rappel d'allure"
-            body_km = 2.0
+            actual_body_km = 2.0
         elif race_type == "Semi-marathon":
             body_label = "2 × 1 km à allure semi"
             body_detail = "récup : 2 min trot — rappel d'allure"
-            body_km = 2.0
+            actual_body_km = 2.0
         else:  # Marathon
             body_label = "3 km continus à allure marathon"
             body_detail = "rappel d'allure, pas plus"
-            body_km = 3.0
-        ech_km = max(1.5, round(km - body_km - retour_km, 1))
-    # Patterns AS par distance cible (hors race week)
-    elif race_type == "5km":
-        body_label = "3 × 1 km à allure 5K"
-        body_detail = "récup : 1 min trot"
-    elif race_type == "10km":
-        body_label = "3 × 2 km à allure 10K"
-        body_detail = "récup : 2 min trot"
-    elif race_type == "Semi-marathon":
-        body_label = "2 × 5 km à allure semi"
-        body_detail = "récup : 3 min trot"
-    else:  # Marathon
-        body_label = "1 × 8 km continus à allure marathon"
-        body_detail = "bloc unique, régularité du pacing"
+            actual_body_km = 3.0
+    else:
+        body_target = _body_target(km)
+        body_label, body_detail, actual_body_km = _pattern_as(body_target, race_type)
+
+    ech_km = _warmup_km(km, actual_body_km)
 
     blocs = [
         {
@@ -305,8 +424,11 @@ def _seance_as(seance, km, race_type, allures, phase_group):
 
 
 def _seance_cotes(seance, km, allures):
-    ech_km = 1.5
-    retour_km = 1.0
+    retour_km = _COOLDOWN_KM
+    body_target = _body_target(km)
+    body_label, body_detail, actual_body_km = _pattern_cotes(body_target)
+    ech_km = _warmup_km(km, actual_body_km)
+
     blocs = [
         {
             "label": "Échauffement",
@@ -315,8 +437,8 @@ def _seance_cotes(seance, km, allures):
             "pace": _pace_range(allures, ZONE_EF),
         },
         {
-            "label": "Corps : 8 × 45 s en côte",
-            "detail": "effort puissant, récup en descente trottée ou marchée",
+            "label": f"Corps : {body_label}",
+            "detail": body_detail,
             "allure": "Effort contrôlé puissant",
             "pace": "—",
         },
@@ -330,7 +452,7 @@ def _seance_cotes(seance, km, allures):
     return {
         "type": seance["type"],
         "label": seance["label"],
-        "summary": "8 × 45 s en côte + échauf.",
+        "summary": body_label + " + échauf.",
         "km_total": km,
         "blocs": blocs,
     }
