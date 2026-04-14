@@ -51,12 +51,12 @@ SESSION_MIX_TEMPLATES = {
     ("5km", 4): {
         PHASE_BASE:     [(EF, 0.25), (VMA, 0.20), (SEUIL, 0.15), (SL, 0.40)],
         PHASE_SPECIFIC: [(EF, 0.20), (VMA, 0.15), (AS,    0.20), (SL, 0.45)],
-        PHASE_TAPER:    [(EF, 0.35), (VMA, 0.20), (AS,    0.10), (EF, 0.35)],
+        PHASE_TAPER:    [(EF, 0.35), (VMA, 0.20), (AS,    0.15), (EF, 0.30)],
     },
     ("5km", 5): {
         PHASE_BASE:     [(EF, 0.20), (EF, 0.15), (VMA, 0.20), (SEUIL, 0.15), (SL, 0.30)],
         PHASE_SPECIFIC: [(EF, 0.20), (EF, 0.15), (VMA, 0.15), (AS,    0.20), (SL, 0.30)],
-        PHASE_TAPER:    [(EF, 0.30), (EF, 0.20), (VMA, 0.15), (AS,    0.10), (EF, 0.25)],
+        PHASE_TAPER:    [(EF, 0.30), (EF, 0.20), (VMA, 0.15), (AS,    0.15), (EF, 0.20)],
     },
     # ---------- 10 km ----------
     ("10km", 3): {
@@ -67,12 +67,12 @@ SESSION_MIX_TEMPLATES = {
     ("10km", 4): {
         PHASE_BASE:     [(EF, 0.25), (VMA, 0.15), (SEUIL, 0.15), (SL, 0.45)],
         PHASE_SPECIFIC: [(EF, 0.20), (SEUIL, 0.15), (AS, 0.20), (SL, 0.45)],
-        PHASE_TAPER:    [(EF, 0.35), (SEUIL, 0.10), (AS, 0.20), (EF, 0.35)],
+        PHASE_TAPER:    [(EF, 0.30), (SEUIL, 0.15), (AS, 0.20), (EF, 0.35)],
     },
     ("10km", 5): {
-        PHASE_BASE:     [(EF, 0.20), (EF, 0.15), (VMA, 0.12), (SEUIL, 0.13), (SL, 0.40)],
-        PHASE_SPECIFIC: [(EF, 0.15), (EF, 0.15), (SEUIL, 0.12), (AS, 0.18), (SL, 0.40)],
-        PHASE_TAPER:    [(EF, 0.30), (EF, 0.20), (SEUIL, 0.10), (AS, 0.15), (EF, 0.25)],
+        PHASE_BASE:     [(EF, 0.20), (EF, 0.15), (VMA, 0.15), (SEUIL, 0.15), (SL, 0.35)],
+        PHASE_SPECIFIC: [(EF, 0.15), (EF, 0.15), (SEUIL, 0.15), (AS, 0.20), (SL, 0.35)],
+        PHASE_TAPER:    [(EF, 0.25), (EF, 0.20), (SEUIL, 0.15), (AS, 0.15), (EF, 0.25)],
     },
     # ---------- Semi-marathon ----------
     ("Semi-marathon", 3): {
@@ -86,9 +86,9 @@ SESSION_MIX_TEMPLATES = {
         PHASE_TAPER:    [(EF, 0.35), (SEUIL, 0.15), (AS, 0.15), (EF, 0.35)],
     },
     ("Semi-marathon", 5): {
-        PHASE_BASE:     [(EF, 0.20), (EF, 0.15), (VMA, 0.12), (SEUIL, 0.13), (SL, 0.40)],
-        PHASE_SPECIFIC: [(EF, 0.15), (EF, 0.15), (SEUIL, 0.13), (AS, 0.12), (SL, 0.45)],
-        PHASE_TAPER:    [(EF, 0.30), (EF, 0.20), (SEUIL, 0.10), (AS, 0.15), (EF, 0.25)],
+        PHASE_BASE:     [(EF, 0.20), (EF, 0.15), (VMA, 0.15), (SEUIL, 0.15), (SL, 0.35)],
+        PHASE_SPECIFIC: [(EF, 0.15), (EF, 0.15), (SEUIL, 0.15), (AS, 0.15), (SL, 0.40)],
+        PHASE_TAPER:    [(EF, 0.25), (EF, 0.20), (SEUIL, 0.15), (AS, 0.15), (EF, 0.25)],
     },
     # ---------- Marathon ----------
     ("Marathon", 3): {
@@ -98,13 +98,13 @@ SESSION_MIX_TEMPLATES = {
     },
     ("Marathon", 4): {
         PHASE_BASE:     [(EF, 0.20), (VMA, 0.15), (SEUIL, 0.15), (SL, 0.50)],
-        PHASE_SPECIFIC: [(EF, 0.15), (SEUIL, 0.15), (AS, 0.15), (SL, 0.55)],
+        PHASE_SPECIFIC: [(EF, 0.20), (SEUIL, 0.15), (AS, 0.20), (SL, 0.45)],
         PHASE_TAPER:    [(EF, 0.35), (SEUIL, 0.15), (AS, 0.15), (EF, 0.35)],
     },
     ("Marathon", 5): {
-        PHASE_BASE:     [(EF, 0.15), (EF, 0.15), (VMA, 0.10), (SEUIL, 0.15), (SL, 0.45)],
-        PHASE_SPECIFIC: [(EF, 0.15), (EF, 0.15), (SEUIL, 0.10), (AS, 0.10), (SL, 0.50)],
-        PHASE_TAPER:    [(EF, 0.25), (EF, 0.20), (SEUIL, 0.10), (AS, 0.20), (EF, 0.25)],
+        PHASE_BASE:     [(EF, 0.15), (EF, 0.15), (VMA, 0.15), (SEUIL, 0.15), (SL, 0.40)],
+        PHASE_SPECIFIC: [(EF, 0.15), (EF, 0.15), (SEUIL, 0.15), (AS, 0.15), (SL, 0.40)],
+        PHASE_TAPER:    [(EF, 0.25), (EF, 0.20), (SEUIL, 0.15), (AS, 0.15), (EF, 0.25)],
     },
 }
 
@@ -118,6 +118,21 @@ SL_MAX_KM = {
     "10km":          18,
     "Semi-marathon": 25,
     "Marathon":      35,
+}
+
+# --- Planchers physiologiques par type de séance (en km) ---
+# En dessous de ces seuils, une séance perd l'essentiel de son intérêt
+# (échauffement + récup consomment déjà ~3-4 km pour VMA/Seuil). Si le volume
+# hebdo ne permet pas de tenir ces minimums pour toutes les séances du template,
+# _enforce_session_minimums() réorganise la semaine (fusion / drop) en
+# conservant le volume hebdo total.
+MIN_SESSION_KM = {
+    EF:    5.0,
+    VMA:   6.0,
+    SEUIL: 6.0,
+    AS:    5.0,
+    COTES: 6.0,
+    SL:    None,  # borné séparément par SL_MAX_KM
 }
 
 # --- Template dédié à la semaine de course : 2 séances max quel que soit n_sessions ---
@@ -175,6 +190,171 @@ def _should_substitute_cotes(race_type, phase_group, is_odd_week):
     return False
 
 
+def _absorb_overflow(sessions, overflow_km):
+    """
+    Redistribue un surplus de km (retiré d'une SL cappée) sur une séance non-SL.
+    Priorité : la plus grosse EF, puis à défaut n'importe quelle autre séance
+    (AS, Seuil, VMA, Côtes) dont le km est le plus grand. Préserve le volume total.
+    Nécessaire pour les templates sans EF (ex. 5km 2 sorties = [AS, SL]).
+    """
+    if overflow_km <= 0:
+        return
+    ef_targets = [x for x in sessions if x["type"] == EF]
+    if ef_targets:
+        target = max(ef_targets, key=lambda x: x["km"])
+    else:
+        non_sl = [x for x in sessions if x["type"] != SL]
+        if not non_sl:
+            return
+        target = max(non_sl, key=lambda x: x["km"])
+    target["km"] = round(target["km"] + overflow_km, 1)
+
+
+def _is_standard_label(label, base):
+    """True si `label` est `base` ou `base N` (suffixe numérique). Exclut les
+    libellés spéciaux ('Endurance fondamentale (longue)', 'EF détente',
+    'Activation (...)') qu'il ne faut pas renommer."""
+    if label == base:
+        return True
+    if label.startswith(f"{base} "):
+        suffix = label[len(base) + 1:]
+        return suffix.isdigit()
+    return False
+
+
+def _renumber_labels(sessions):
+    """Renumérote les libellés standards après que _enforce_session_minimums a pu
+    droper ou fusionner des séances, pour éviter d'afficher 'Endurance fondamentale 2'
+    alors qu'une seule EF subsiste. Ne touche pas aux libellés spéciaux."""
+    type_counts = {}
+    for s in sessions:
+        type_counts[s["type"]] = type_counts.get(s["type"], 0) + 1
+    seen = {}
+    for s in sessions:
+        t = s["type"]
+        base = LABELS.get(t)
+        if base is None or not _is_standard_label(s["label"], base):
+            continue
+        if type_counts[t] > 1:
+            idx = seen.get(t, 0) + 1
+            seen[t] = idx
+            s["label"] = f"{base} {idx}"
+        else:
+            s["label"] = base
+
+
+def _enforce_session_minimums(sessions, race_type, phase_group):
+    """
+    Redistribue les km pour garantir que chaque séance respecte son plancher
+    physiologique (voir MIN_SESSION_KM). Séquence par séance sous plancher :
+
+    1. Prendre sur la SL (tant qu'elle reste ≥ SL_MAX_KM × 0.4, garde-fou).
+    2. Prendre sur la plus grosse EF donneuse (qui reste ≥ MIN_SESSION_KM[EF]).
+    3. Sinon : DROP la séance et rediriger ses km vers (a) une séance jumelle
+       du même type si elle existe, (b) à défaut la plus grosse EF, (c) à
+       défaut la SL.
+
+    Invariant : `sum(s['km'] for s in sessions)` est préservé (à l'arrondi près).
+    La longueur de `sessions` peut diminuer si des séances ont été fusionnées.
+    """
+    sl_max = SL_MAX_KM.get(race_type)
+    sl_reserve = sl_max * 0.4 if sl_max else None
+
+    max_iters = 6
+    for _ in range(max_iters):
+        changed = False
+        for i, s in enumerate(sessions):
+            t = s["type"]
+            if t == SL:
+                continue
+            min_km = MIN_SESSION_KM.get(t)
+            if min_km is None or s["km"] >= min_km:
+                continue
+
+            deficit = round(min_km - s["km"], 1)
+
+            # 1) Prendre sur SL si elle est au-dessus de sa réserve
+            if deficit > 0 and sl_reserve is not None:
+                for sl in sessions:
+                    if sl["type"] != SL:
+                        continue
+                    available = max(0.0, round(sl["km"] - sl_reserve, 1))
+                    take = min(deficit, available)
+                    if take > 0:
+                        sl["km"] = round(sl["km"] - take, 1)
+                        s["km"] = round(s["km"] + take, 1)
+                        if "km_as" in sl:
+                            sl["km_as"] = round(sl["km"] * 0.15, 1)
+                        deficit = round(deficit - take, 1)
+                        changed = True
+                    break
+
+            # 2) Prendre sur les EF donneuses (hors self) tant qu'il reste un surplus
+            if deficit > 0:
+                ef_min = MIN_SESSION_KM[EF]
+                ef_donors = sorted(
+                    [x for x in sessions
+                     if x["type"] == EF and x is not s and x["km"] > ef_min],
+                    key=lambda x: -x["km"],
+                )
+                for ef in ef_donors:
+                    if deficit <= 0:
+                        break
+                    available = max(0.0, round(ef["km"] - ef_min, 1))
+                    take = min(deficit, available)
+                    if take > 0:
+                        ef["km"] = round(ef["km"] - take, 1)
+                        s["km"] = round(s["km"] + take, 1)
+                        deficit = round(deficit - take, 1)
+                        changed = True
+
+            # 3) Drop si le déficit persiste — fusion avec un jumeau, sinon EF, sinon SL
+            if deficit > 0 and s["km"] < min_km:
+                dropped_km = s["km"]
+                twin = next(
+                    (x for x in sessions if x["type"] == t and x is not s),
+                    None,
+                )
+                if twin is not None:
+                    twin["km"] = round(twin["km"] + dropped_km, 1)
+                else:
+                    ef_targets = [x for x in sessions
+                                  if x["type"] == EF and x is not s]
+                    if ef_targets:
+                        target = max(ef_targets, key=lambda x: x["km"])
+                        target["km"] = round(target["km"] + dropped_km, 1)
+                    else:
+                        sl_targets = [x for x in sessions if x["type"] == SL]
+                        if sl_targets:
+                            sl_targets[0]["km"] = round(
+                                sl_targets[0]["km"] + dropped_km, 1
+                            )
+                            if "km_as" in sl_targets[0]:
+                                sl_targets[0]["km_as"] = round(
+                                    sl_targets[0]["km"] * 0.15, 1
+                                )
+                sessions.pop(i)
+                changed = True
+                break  # repartir du début avec la liste modifiée
+
+        if not changed:
+            break
+
+    _renumber_labels(sessions)
+
+    # Si une fusion a poussé la SL au-dessus du cap, recapper proprement.
+    if sl_max is not None:
+        for s in sessions:
+            if s["type"] == SL and s["km"] > sl_max:
+                overflow = round(s["km"] - sl_max, 1)
+                s["km"] = float(sl_max)
+                if "km_as" in s:
+                    s["km_as"] = round(sl_max * 0.15, 1)
+                _absorb_overflow(sessions, overflow)
+
+    return sessions
+
+
 def compute_sessions(volume_total, race_type, n_sessions, phase_group, semaine):
     """
     À partir d'un volume hebdo et du template (course, sorties, phase), renvoie la liste
@@ -202,7 +382,7 @@ def compute_sessions(volume_total, race_type, n_sessions, phase_group, semaine):
             else:
                 label = "EF détente"
             sessions.append({"type": t, "label": label, "km": km})
-        return sessions
+        return _enforce_session_minimums(sessions, race_type, phase_group)
 
     template = SESSION_MIX_TEMPLATES.get((race_type, n_sessions))
     if template is None:
@@ -265,20 +445,23 @@ def compute_sessions(volume_total, race_type, n_sessions, phase_group, semaine):
                 s["km"] = float(sl_max)
                 if "km_as" in s:
                     s["km_as"] = round(sl_max * 0.15, 1)
-                ef_sessions = [x for x in sessions if x["type"] == EF]
-                if ef_sessions:
-                    biggest_ef = max(ef_sessions, key=lambda x: x["km"])
-                    biggest_ef["km"] = round(biggest_ef["km"] + overflow, 1)
+                _absorb_overflow(sessions, overflow)
+
+    # --- Plancher minimum par séance ---
+    # Garantit qu'aucune séance ne tombe sous son plancher physiologique (cf. MIN_SESSION_KM).
+    # Peut fusionner / supprimer des séances si le volume hebdo ne permet pas de tenir toutes
+    # les séances du template au-dessus de leur plancher — le volume total est préservé.
+    sessions = _enforce_session_minimums(sessions, race_type, phase_group)
 
     # --- Cible minimale pour la SL en phase specific ---
     # Garantit que la SL peut atteindre SL_MAX_KM quel que soit le niveau et le
     # nombre de sorties, tant que le volume hebdo le permet. On puise le déficit
     # sur les séances EF du mix (de la plus grosse à la plus petite), sans
-    # descendre sous un plancher de 3 km par EF. Ainsi, un plan Débutant marathon
+    # descendre sous MIN_SESSION_KM[EF]. Ainsi, un plan Débutant marathon
     # avec 5 sorties (pic 60 km, SL naturelle 30 km) peut quand même atteindre
-    # une SL de 35 km en phase specific.
+    # une SL de 35 km en phase specific (dans la limite du surplus EF disponible).
     if sl_max is not None and phase_group == PHASE_SPECIFIC:
-        min_ef_km = 3.0
+        min_ef_km = MIN_SESSION_KM[EF]
         for s in sessions:
             if s["type"] == SL and s["km"] < sl_max:
                 deficit = round(sl_max - s["km"], 1)
