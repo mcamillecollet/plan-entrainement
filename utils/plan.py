@@ -114,7 +114,7 @@ def _repartir_seances(volume_total, sem_type, semaine, sorties_par_semaine, is_l
             'Volume total (km)': round(volume_total, 1)
         }
 
-    else:  # 4 sorties
+    elif sorties_par_semaine == 4:
         ef_km = round(volume_total * 0.20, 1)
         quali1_km = round(volume_total * 0.15, 1)
         quali2_km = round(volume_total * 0.15, 1)
@@ -125,6 +125,24 @@ def _repartir_seances(volume_total, sem_type, semaine, sorties_par_semaine, is_l
             'EF (km)': ef_km,
             'Qualitative 1 VMA (km)': quali1_km,
             'Qualitative 2 seuil/côtes (km)': quali2_km,
+            'Sortie longue (km)': sortie_longue_km,
+            'dont AS (km)': as_km,
+            'Volume total (km)': round(volume_total, 1)
+        }
+
+    else:  # 5 sorties
+        ef1_km = round(volume_total * 0.15, 1)
+        ef2_km = round(volume_total * 0.15, 1)
+        vma_km = round(volume_total * 0.12, 1)
+        seuil_km = round(volume_total * 0.13, 1)
+        sortie_longue_km = round(volume_total * 0.45, 1)
+        as_km = round(sortie_longue_km * 0.15, 1)
+        return {
+            'Semaine': semaine, 'Type': sem_type,
+            'EF 1 (km)': ef1_km,
+            'EF 2 (km)': ef2_km,
+            'Qualitative VMA (km)': vma_km,
+            'Qualitative seuil/côtes (km)': seuil_km,
             'Sortie longue (km)': sortie_longue_km,
             'dont AS (km)': as_km,
             'Volume total (km)': round(volume_total, 1)

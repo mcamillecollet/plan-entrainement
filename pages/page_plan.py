@@ -13,6 +13,12 @@ from utils import (
 
 DISTANCES_MAP = {"5km": 5, "10km": 10, "Semi-marathon": 21.0975, "Marathon": 42.195}
 DUREE_PAR_DEFAUT = 12
+SORTIES_PAR_DISTANCE = {
+    "5km":           ([2, 3, 4, 5], 3),
+    "10km":          ([3, 4, 5],    4),
+    "Semi-marathon": ([3, 4, 5],    4),
+    "Marathon":      ([3, 4, 5],    4),
+}
 
 
 def render():
@@ -49,14 +55,13 @@ def render():
 
     defaults = {
         'p_type_course': 0, 'p_chrono_actuel': '', 'p_chrono_cible': '',
-        'p_sorties': 1, 'p_date_course': None
+        'p_date_course': None
     }
     for k, v in defaults.items():
         if k not in st.session_state:
             st.session_state[k] = v
 
     types_course = list(DISTANCES_MAP.keys())
-    sorties_options = [2, 3, 4]
 
     col_a, col_b = st.columns(2)
     with col_a:
@@ -64,6 +69,9 @@ def render():
         chrono_actuel = st.text_input("Chrono actuel (ex: 1h45)", key="p_chrono_actuel")
         chrono_cible = st.text_input("Chrono vis\u00e9 (ex: 1h30)", key="p_chrono_cible")
     with col_b:
+        sorties_options, sorties_default = SORTIES_PAR_DISTANCE[type_course]
+        if st.session_state.get("p_sorties") not in sorties_options:
+            st.session_state["p_sorties"] = sorties_default
         sorties_par_semaine = st.selectbox("Sorties par semaine", sorties_options, key="p_sorties")
         date_course = st.date_input("Date de la course (optionnelle)", value=None, format="DD/MM/YYYY", key="p_date_course")
 
@@ -280,11 +288,18 @@ def render():
                 rows.append(session_row('Endurance fondamentale', row['EF (km)']))
                 rows.append(session_row('VMA / Seuil / C\u00f4tes', row['Qualitative VMA/seuil/c\u00f4tes (km)']))
                 rows.append(session_row(f'Sortie longue <span style="opacity:0.55;font-size:0.72rem;">(dont AS {as_km} km)</span>', row['Sortie longue (km)'], last=True))
-            else:
+            elif sorties_par_semaine == 4:
                 as_km = row['dont AS (km)']
                 rows.append(session_row('Endurance fondamentale', row['EF (km)']))
                 rows.append(session_row('VMA', row['Qualitative 1 VMA (km)']))
                 rows.append(session_row('Seuil / C\u00f4tes', row['Qualitative 2 seuil/c\u00f4tes (km)']))
+                rows.append(session_row(f'Sortie longue <span style="opacity:0.55;font-size:0.72rem;">(dont AS {as_km} km)</span>', row['Sortie longue (km)'], last=True))
+            else:
+                as_km = row['dont AS (km)']
+                rows.append(session_row('Endurance fondamentale 1', row['EF 1 (km)']))
+                rows.append(session_row('Endurance fondamentale 2', row['EF 2 (km)']))
+                rows.append(session_row('VMA', row['Qualitative VMA (km)']))
+                rows.append(session_row('Seuil / C\u00f4tes', row['Qualitative seuil/c\u00f4tes (km)']))
                 rows.append(session_row(f'Sortie longue <span style="opacity:0.55;font-size:0.72rem;">(dont AS {as_km} km)</span>', row['Sortie longue (km)'], last=True))
 
             seances_html = "\n".join(rows)
