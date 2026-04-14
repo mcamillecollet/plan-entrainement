@@ -9,7 +9,7 @@
 # utilisée par la page Plan pour afficher un résumé inline + un détail dépliable.
 
 from utils.vdot import allures_from_vdot, format_pace
-from utils.session_mix import EF, VMA, SEUIL, AS, SL, COTES, LABELS, PHASE_TAPER
+from utils.session_mix import EF, VMA, SEUIL, AS, SL, COTES, LABELS, PHASE_TAPER, PHASE_RACE_WEEK
 
 
 # --- Libellés de zones d'allure (doivent correspondre à allures_from_vdot) ---
@@ -63,7 +63,7 @@ def generer_seance_detaillee(seance, vdot, race_type, phase_group):
     if t == SEUIL:
         return _seance_seuil(seance, km, allures, phase_group)
     if t == AS:
-        return _seance_as(seance, km, race_type, allures)
+        return _seance_as(seance, km, race_type, allures, phase_group)
     if t == COTES:
         return _seance_cotes(seance, km, allures)
 
@@ -129,8 +129,16 @@ def _seance_vma(seance, km, allures, phase_group):
     retour_km = 0.5
     km_body = max(0.5, round(km - ech_km - retour_km, 1))
 
+    # Race week : stimulus court et non traumatisant, quel que soit le volume.
+    # On pad l'échauffement pour absorber le volume excédentaire (rien ne sert de raccourcir
+    # le km total : le coureur garde une sortie complète, seul le corps de séance est court).
+    if phase_group == PHASE_RACE_WEEK:
+        body_label = "6 × 200 m"
+        body_detail = "récup : 1 min marche/trot — effort vif mais non maximal"
+        body_km = 1.2
+        ech_km = max(1.5, round(km - body_km - retour_km, 1))
     # Choix du motif en fonction du volume de travail
-    if km_body <= 2.0:
+    elif km_body <= 2.0:
         pattern_reps = 8 if phase_group != PHASE_TAPER else 6
         body_label = f"{pattern_reps} × 30 s vite / 30 s trot"
         body_detail = "récup : trot actif, même durée que l'effort"
@@ -229,12 +237,32 @@ def _seance_seuil(seance, km, allures, phase_group):
     }
 
 
-def _seance_as(seance, km, race_type, allures):
+def _seance_as(seance, km, race_type, allures, phase_group):
     ech_km = 1.5
     retour_km = 1.0
 
-    # Patterns AS par distance cible
-    if race_type == "5km":
+    # Race week : corps très court, juste un rappel d'allure cible.
+    # L'échauffement absorbe le volume excédentaire (on garde une sortie "normale" en km).
+    if phase_group == PHASE_RACE_WEEK:
+        if race_type == "5km":
+            body_label = "3 × 500 m à allure 5K"
+            body_detail = "récup : 1 min trot — rappel d'allure"
+            body_km = 1.5
+        elif race_type == "10km":
+            body_label = "2 × 1 km à allure 10K"
+            body_detail = "récup : 2 min trot — rappel d'allure"
+            body_km = 2.0
+        elif race_type == "Semi-marathon":
+            body_label = "2 × 1 km à allure semi"
+            body_detail = "récup : 2 min trot — rappel d'allure"
+            body_km = 2.0
+        else:  # Marathon
+            body_label = "3 km continus à allure marathon"
+            body_detail = "rappel d'allure, pas plus"
+            body_km = 3.0
+        ech_km = max(1.5, round(km - body_km - retour_km, 1))
+    # Patterns AS par distance cible (hors race week)
+    elif race_type == "5km":
         body_label = "3 × 1 km à allure 5K"
         body_detail = "récup : 1 min trot"
     elif race_type == "10km":

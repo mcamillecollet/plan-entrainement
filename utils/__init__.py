@@ -20,7 +20,7 @@ from utils.vdot import parse_chrono, estimer_vdot, allures_from_vdot, format_pac
 from utils.session_mix import (
     compute_sessions, get_phase_group,
     EF, VMA, SEUIL, AS, SL, COTES, LABELS,
-    PHASE_BASE, PHASE_SPECIFIC, PHASE_TAPER,
+    PHASE_BASE, PHASE_SPECIFIC, PHASE_TAPER, PHASE_RACE_WEEK,
 )
 from utils.plan import generer_plan_personnalise, get_volume_pic_range, deriver_volumes
 from utils.seance import generer_seance_detaillee

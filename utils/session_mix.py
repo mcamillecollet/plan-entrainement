@@ -23,12 +23,14 @@ LABELS = {
 }
 
 # --- Phases macro : regroupent les phases fines de plan.py ---
-# 'base'     → construction aérobie, peu d'allure spécifique
-# 'specific' → préparation spécifique, AS et qualité dominantes
-# 'taper'    → affûtage, volume réduit, dernier rappel d'AS
+# 'base'       → construction aérobie, peu d'allure spécifique
+# 'specific'   → préparation spécifique, AS et qualité dominantes
+# 'taper'      → affûtage, volume réduit, dernier rappel d'AS
+# 'race_week'  → semaine de course : 2 séances seulement (activation + EF détente)
 PHASE_BASE = "base"
 PHASE_SPECIFIC = "specific"
 PHASE_TAPER = "taper"
+PHASE_RACE_WEEK = "race_week"
 
 
 # --- Templates de répartition : pct du volume hebdo par type de séance ---
@@ -106,23 +108,39 @@ SESSION_MIX_TEMPLATES = {
     },
 }
 
+# --- Template dédié à la semaine de course : 2 séances max quel que soit n_sessions ---
+# Activation (AS/VMA courte) + EF détente. Ne dépend que du type de course.
+RACE_WEEK_TEMPLATES = {
+    "5km":           [(VMA, 0.40), (EF, 0.60)],
+    "10km":          [(AS,  0.40), (EF, 0.60)],
+    "Semi-marathon": [(AS,  0.40), (EF, 0.60)],
+    "Marathon":      [(AS,  0.40), (EF, 0.60)],
+}
+
 # --- Sanity-check à l'import : somme des pct == 1.0 par (course, sorties, phase) ---
 for _key, _phases in SESSION_MIX_TEMPLATES.items():
     for _phase, _mix in _phases.items():
         _total = sum(p for _, p in _mix)
         assert abs(_total - 1.0) < 0.01, f"SESSION_MIX_TEMPLATES{_key}[{_phase}] sum={_total}"
 
+for _rt, _mix in RACE_WEEK_TEMPLATES.items():
+    _total = sum(p for _, p in _mix)
+    assert abs(_total - 1.0) < 0.01, f"RACE_WEEK_TEMPLATES[{_rt}] sum={_total}"
+
 
 def get_phase_group(sem_type, semaine, semaine_pic):
     """
-    Regroupe les phases fines de plan.py en 3 phases macro qui pilotent le mix de séances.
+    Regroupe les phases fines de plan.py en 4 phases macro qui pilotent le mix de séances.
 
-    - Recovery / Race Week              → 'taper'
+    - Race Week                         → 'race_week' (template dédié 2 séances)
+    - Recovery                          → 'taper'
     - Peak                              → 'specific'
     - Under progress / Cool down        → 'base' sur les 2 premiers tiers des semaines de build
                                           puis 'specific' sur le dernier tiers (pré-peak).
     """
-    if sem_type in ("Recovery", "Race Week"):
+    if sem_type == "Race Week":
+        return PHASE_RACE_WEEK
+    if sem_type == "Recovery":
         return PHASE_TAPER
     if sem_type == "Peak":
         return PHASE_SPECIFIC
@@ -158,6 +176,22 @@ def compute_sessions(volume_total, race_type, n_sessions, phase_group, semaine):
     - Pour 2 sorties/semaine, la SL est remplacée par une sortie EF une semaine sur deux
       (alternance historique du plan).
     """
+    # --- Race week : template dédié (2 séances, indépendant de n_sessions) ---
+    if phase_group == PHASE_RACE_WEEK:
+        mix = RACE_WEEK_TEMPLATES.get(race_type)
+        if mix is None:
+            return []
+        sessions = []
+        # Labels fixes : "Activation" pour la séance de qualité, "EF détente" pour la récup.
+        for idx, (t, pct) in enumerate(mix):
+            km = round(volume_total * pct, 1)
+            if idx == 0:
+                label = f"Activation ({LABELS[t]})"
+            else:
+                label = "EF détente"
+            sessions.append({"type": t, "label": label, "km": km})
+        return sessions
+
     template = SESSION_MIX_TEMPLATES.get((race_type, n_sessions))
     if template is None:
         # Fallback : au cas où une combinaison ne serait pas couverte, on renvoie une liste vide.

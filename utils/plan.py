@@ -14,8 +14,11 @@ def deriver_volumes(type_course, niveau, sorties_par_semaine, sorties_options):
     """
     Dérive (volume_debut, volume_pic) en km/semaine à partir :
     - de la fourchette VOLUME_PIC_LIMITS[(type, niveau)]
-    - de la position de `sorties_par_semaine` dans `sorties_options`
-      (plus de sorties → plus de volume, interpolation linéaire entre min et max)
+    - de la position de `sorties_par_semaine` dans `sorties_options`.
+      Le pic atteint au minimum 70 % de la fourchette [pic_min, pic_max] même avec peu
+      de sorties, et atteint pic_max au nombre maximum de sorties. Le nombre de sorties
+      garde donc un léger effet sur le plafond sans pour autant ramener au bas de la
+      fourchette.
     - d'un volume de départ à 60 % du pic (plancher 5 km).
     """
     pic_min, pic_max = get_volume_pic_range(type_course, niveau)
@@ -23,8 +26,10 @@ def deriver_volumes(type_course, niveau, sorties_par_semaine, sorties_options):
     if n_max > n_min:
         ratio = (sorties_par_semaine - n_min) / (n_max - n_min)
     else:
-        ratio = 0.5
-    volume_pic = round(pic_min + ratio * (pic_max - pic_min))
+        ratio = 1.0
+    # Interpolation entre 0.7*fourchette (min sorties) et 1.0*fourchette (max sorties).
+    effective_ratio = 0.7 + 0.3 * ratio
+    volume_pic = round(pic_min + effective_ratio * (pic_max - pic_min))
     volume_debut = max(5, round(volume_pic * 0.60))
     return volume_debut, volume_pic
 
@@ -94,7 +99,7 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic,
             volume_total = volume_pic * coef
             sem_type = 'Recovery'
         else:
-            volume_total = volume_pic * 0.35
+            volume_total = volume_pic * 0.30
             sem_type = 'Race Week'
 
         phase_group = get_phase_group(sem_type, semaine, semaine_pic)
