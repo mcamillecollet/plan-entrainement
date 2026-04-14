@@ -281,13 +281,26 @@ def render():
                 color = colors_type.get(sem_type, '#B0B0B0')
                 seances = row['S\u00e9ances'] or []
 
+                # Badge optionnel quand le nombre de séances est réduit par le
+                # post-traitement (volume hebdo trop bas pour tenir toutes les séances
+                # au-dessus de leur plancher physiologique). La Race Week a toujours
+                # 2 séances par design, on ne l'annote pas.
+                reduced_badge = ""
+                if sem_type != 'Race Week' and len(seances) < sorties_par_semaine:
+                    reduced_badge = (
+                        f'<span style="font-family:\'Outfit\',sans-serif; font-weight:500; '
+                        f'font-size:0.72rem; color:#C8C8C8; background:rgba(255,255,255,0.08); '
+                        f'border-radius:4px; padding:0.1rem 0.4rem; margin-left:0.5rem;">'
+                        f'{len(seances)} s\u00e9ances (volume r\u00e9duit)</span>'
+                    )
+
                 with col:
                     with st.container(border=True):
                         # En-tête de la carte : semaine + phase + volume
                         st.markdown(
                             f"""<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem; border-left:4px solid {color}; padding-left:0.6rem;">
 <span style="font-family:'Outfit',sans-serif; font-weight:600; font-size:1rem; color:#F0F0F0;">Semaine {sem}
-<span style="font-weight:400; font-size:0.78rem; color:{color}; margin-left:0.5rem; text-transform:uppercase; letter-spacing:0.06em;">{sem_type}</span>
+<span style="font-weight:400; font-size:0.78rem; color:{color}; margin-left:0.5rem; text-transform:uppercase; letter-spacing:0.06em;">{sem_type}</span>{reduced_badge}
 </span>
 <span style="font-family:'Geist Mono',monospace; font-size:0.85rem; font-weight:500; color:#F0F0F0;">{vol} km</span>
 </div>""",
