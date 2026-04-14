@@ -270,4 +270,35 @@ def compute_sessions(volume_total, race_type, n_sessions, phase_group, semaine):
                     biggest_ef = max(ef_sessions, key=lambda x: x["km"])
                     biggest_ef["km"] = round(biggest_ef["km"] + overflow, 1)
 
+    # --- Cible minimale pour la SL en phase specific ---
+    # Garantit que la SL peut atteindre SL_MAX_KM quel que soit le niveau et le
+    # nombre de sorties, tant que le volume hebdo le permet. On puise le déficit
+    # sur les séances EF du mix (de la plus grosse à la plus petite), sans
+    # descendre sous un plancher de 3 km par EF. Ainsi, un plan Débutant marathon
+    # avec 5 sorties (pic 60 km, SL naturelle 30 km) peut quand même atteindre
+    # une SL de 35 km en phase specific.
+    if sl_max is not None and phase_group == PHASE_SPECIFIC:
+        min_ef_km = 3.0
+        for s in sessions:
+            if s["type"] == SL and s["km"] < sl_max:
+                deficit = round(sl_max - s["km"], 1)
+                remaining = deficit
+                ef_sessions = sorted(
+                    [x for x in sessions if x["type"] == EF],
+                    key=lambda x: -x["km"],
+                )
+                for ef in ef_sessions:
+                    if remaining <= 0:
+                        break
+                    available = max(0.0, round(ef["km"] - min_ef_km, 1))
+                    take = min(remaining, available)
+                    if take > 0:
+                        ef["km"] = round(ef["km"] - take, 1)
+                        remaining = round(remaining - take, 1)
+                total_boost = round(deficit - remaining, 1)
+                if total_boost > 0:
+                    s["km"] = round(s["km"] + total_boost, 1)
+                    if "km_as" in s:
+                        s["km_as"] = round(s["km"] * 0.15, 1)
+
     return sessions
