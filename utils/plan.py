@@ -99,7 +99,9 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic,
             volume_total = volume_pic * coef
             sem_type = 'Recovery'
         else:
-            volume_total = volume_pic * 0.30
+            # Race Week plafonnée à 18 km pour éviter une dernière semaine
+            # trop chargée lorsque le volume pic est élevé (ex. pic 80 km → 24 km sans cap).
+            volume_total = min(volume_pic * 0.30, 18)
             sem_type = 'Race Week'
 
         phase_group = get_phase_group(sem_type, semaine, semaine_pic)

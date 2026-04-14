@@ -101,7 +101,7 @@ def render():
             st.warning("La date de course est pass\u00e9e ou aujourd'hui : plan par d\u00e9faut de 12 semaines.")
             duree_semaine = DUREE_PAR_DEFAUT
         else:
-            duree_semaine = max(6, min(20, jours_restants // 7))
+            duree_semaine = max(6, min(18, jours_restants // 7))
     else:
         duree_semaine = DUREE_PAR_DEFAUT
 

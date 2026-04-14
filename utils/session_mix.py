@@ -144,6 +144,13 @@ RACE_WEEK_TEMPLATES = {
     "Marathon":      [(AS,  0.40), (EF, 0.60)],
 }
 
+# --- Shake out run fixe de la semaine de course ---
+# Très courte sortie (matin de course ou veille) ajoutée systématiquement en 3ᵉ séance.
+# Km fixes — ne dépend pas du volume hebdo et ne suit pas les planchers MIN_SESSION_KM
+# (la race week est volontairement composée de séances courtes, donc exclue du
+# post-traitement _enforce_session_minimums).
+RACE_WEEK_SHAKEOUT_KM = 4.0
+
 # --- Sanity-check à l'import : somme des pct == 1.0 par (course, sorties, phase) ---
 for _key, _phases in SESSION_MIX_TEMPLATES.items():
     for _phase, _mix in _phases.items():
@@ -368,21 +375,28 @@ def compute_sessions(volume_total, race_type, n_sessions, phase_group, semaine):
     - Pour 2 sorties/semaine, la SL est remplacée par une sortie EF une semaine sur deux
       (alternance historique du plan).
     """
-    # --- Race week : template dédié (2 séances, indépendant de n_sessions) ---
+    # --- Race week : template dédié (3 séances fixes, indépendant de n_sessions) ---
+    # Activation + EF détente + Shake out run (4 km). Séances volontairement courtes,
+    # donc on n'applique PAS _enforce_session_minimums ici (le shake out à 4 km est
+    # sous le plancher EF de 5 km et c'est voulu).
     if phase_group == PHASE_RACE_WEEK:
         mix = RACE_WEEK_TEMPLATES.get(race_type)
         if mix is None:
             return []
+        shakeout_km = RACE_WEEK_SHAKEOUT_KM
+        remaining = max(0.0, volume_total - shakeout_km)
         sessions = []
         # Labels fixes : "Activation" pour la séance de qualité, "EF détente" pour la récup.
         for idx, (t, pct) in enumerate(mix):
-            km = round(volume_total * pct, 1)
+            km = round(remaining * pct, 1)
             if idx == 0:
                 label = f"Activation ({LABELS[t]})"
             else:
                 label = "EF détente"
             sessions.append({"type": t, "label": label, "km": km})
-        return _enforce_session_minimums(sessions, race_type, phase_group)
+        # Shake out run fixe en 3ᵉ séance (matin de course / veille).
+        sessions.append({"type": EF, "label": "Shake out run", "km": shakeout_km})
+        return sessions
 
     template = SESSION_MIX_TEMPLATES.get((race_type, n_sessions))
     if template is None:
