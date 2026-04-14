@@ -6,7 +6,7 @@ from matplotlib.ticker import MultipleLocator
 from utils import (
     inject_css, style_ax, parse_chrono, estimer_vdot,
     allures_from_vdot, format_pace, generer_plan_personnalise,
-    deduire_niveau, deriver_volumes,
+    deduire_niveau, deriver_volumes, generer_seance_detaillee,
     COLOR_PRIMARY, COLOR_SECONDARY,
     CHART_LINE_ASCENT, CHART_LINE_DESCENT
 )
@@ -262,54 +262,67 @@ def render():
         # --- Cartes par semaine ---
         st.markdown('<p class="section-label">D\u00e9tail par semaine</p>', unsafe_allow_html=True)
 
-        session_style = 'display:flex; justify-content:space-between; align-items:center; padding:0.35rem 0; border-bottom:1px solid rgba(255,255,255,0.07);'
-        session_style_last = 'display:flex; justify-content:space-between; align-items:center; padding:0.35rem 0;'
-        name_style = "font-family:'Outfit',sans-serif; font-size:0.85rem; font-weight:400; color:#E0E0E0;"
-        km_style = "font-family:'Geist Mono',monospace; font-size:0.82rem; font-weight:500; color:#F0F0F0; white-space:nowrap;"
+        name_style = "font-family:'Outfit',sans-serif; font-size:0.9rem; font-weight:500; color:#F0F0F0;"
+        summary_style = "font-family:'Outfit',sans-serif; font-size:0.76rem; color:#A8A8A8; margin-top:0.1rem;"
+        km_style = "font-family:'Geist Mono',monospace; font-size:0.85rem; font-weight:500; color:#F0F0F0; white-space:nowrap;"
 
-        def session_row(name, km, last=False):
-            s = session_style_last if last else session_style
-            return f'<div style="{s}"><span style="{name_style}">{name}</span><span style="{km_style}">{km} km</span></div>'
+        rows_iter = list(plan_df.iterrows())
+        # Deux semaines par ligne pour garder la grille 2 colonnes actuelle
+        for i in range(0, len(rows_iter), 2):
+            cols = st.columns(2)
+            for j, col in enumerate(cols):
+                if i + j >= len(rows_iter):
+                    continue
+                _, row = rows_iter[i + j]
+                sem = int(row['Semaine'])
+                sem_type = row['Type']
+                phase_group = row.get('Phase', 'base')
+                vol = row['Volume total (km)']
+                color = colors_type.get(sem_type, '#B0B0B0')
+                seances = row['S\u00e9ances'] or []
 
-        cards_html = []
-        for _, row in plan_df.iterrows():
-            sem = int(row['Semaine'])
-            sem_type = row['Type']
-            vol = row['Volume total (km)']
-            color = colors_type.get(sem_type, '#B0B0B0')
-
-            rows = []
-            if sorties_par_semaine == 2:
-                rows.append(session_row('Seuil / VMA', row['Qualitative seuil/VMA (km)']))
-                detail = row['D\u00e9tail sortie longue']
-                rows.append(session_row(detail, row['Sortie longue ou EF (km)'], last=True))
-            elif sorties_par_semaine == 3:
-                as_km = row['dont AS (km)']
-                rows.append(session_row('Endurance fondamentale', row['EF (km)']))
-                rows.append(session_row('VMA / Seuil / C\u00f4tes', row['Qualitative VMA/seuil/c\u00f4tes (km)']))
-                rows.append(session_row(f'Sortie longue <span style="opacity:0.55;font-size:0.72rem;">(dont AS {as_km} km)</span>', row['Sortie longue (km)'], last=True))
-            elif sorties_par_semaine == 4:
-                as_km = row['dont AS (km)']
-                rows.append(session_row('Endurance fondamentale', row['EF (km)']))
-                rows.append(session_row('VMA', row['Qualitative 1 VMA (km)']))
-                rows.append(session_row('Seuil / C\u00f4tes', row['Qualitative 2 seuil/c\u00f4tes (km)']))
-                rows.append(session_row(f'Sortie longue <span style="opacity:0.55;font-size:0.72rem;">(dont AS {as_km} km)</span>', row['Sortie longue (km)'], last=True))
-            else:
-                as_km = row['dont AS (km)']
-                rows.append(session_row('Endurance fondamentale 1', row['EF 1 (km)']))
-                rows.append(session_row('Endurance fondamentale 2', row['EF 2 (km)']))
-                rows.append(session_row('VMA', row['Qualitative VMA (km)']))
-                rows.append(session_row('Seuil / C\u00f4tes', row['Qualitative seuil/c\u00f4tes (km)']))
-                rows.append(session_row(f'Sortie longue <span style="opacity:0.55;font-size:0.72rem;">(dont AS {as_km} km)</span>', row['Sortie longue (km)'], last=True))
-
-            seances_html = "\n".join(rows)
-            cards_html.append(f"""<div style="background:#3A3A3A; border-left:4px solid {color}; border-radius:8px; padding:1rem 1.2rem;">
-<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
-<span style="font-family:'Outfit',sans-serif; font-weight:600; font-size:1rem; color:#F0F0F0;">Semaine {sem} <span style="font-weight:400; font-size:0.78rem; color:{color}; margin-left:0.5rem; text-transform:uppercase; letter-spacing:0.06em;">{sem_type}</span></span>
+                with col:
+                    with st.container(border=True):
+                        # En-tête de la carte : semaine + phase + volume
+                        st.markdown(
+                            f"""<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem; border-left:4px solid {color}; padding-left:0.6rem;">
+<span style="font-family:'Outfit',sans-serif; font-weight:600; font-size:1rem; color:#F0F0F0;">Semaine {sem}
+<span style="font-weight:400; font-size:0.78rem; color:{color}; margin-left:0.5rem; text-transform:uppercase; letter-spacing:0.06em;">{sem_type}</span>
+</span>
 <span style="font-family:'Geist Mono',monospace; font-size:0.85rem; font-weight:500; color:#F0F0F0;">{vol} km</span>
-</div>
-{seances_html}
-</div>""")
+</div>""",
+                            unsafe_allow_html=True,
+                        )
 
-        grid_html = '<div style="display:grid; grid-template-columns:1fr 1fr; gap:0.7rem;">\n' + "\n".join(cards_html) + '\n</div>'
-        st.markdown(grid_html, unsafe_allow_html=True)
+                        # Une ligne + expander par séance
+                        for s_idx, seance in enumerate(seances):
+                            detail = generer_seance_detaillee(
+                                seance, vdot_actuel, type_course, phase_group
+                            )
+                            km_txt = f"{seance['km']:.1f} km"
+                            summary_txt = detail['summary']
+
+                            st.markdown(
+                                f"""<div style="display:flex; justify-content:space-between; align-items:flex-start; padding:0.25rem 0;">
+<div style="flex:1; min-width:0;">
+<div style="{name_style}">{seance['label']}</div>
+<div style="{summary_style}">{summary_txt}</div>
+</div>
+<div style="{km_style}; margin-left:0.8rem;">{km_txt}</div>
+</div>""",
+                                unsafe_allow_html=True,
+                            )
+
+                            with st.expander("Voir le d\u00e9tail de la s\u00e9ance", expanded=False):
+                                for bloc in detail['blocs']:
+                                    st.markdown(
+                                        f"""<div style="padding:0.35rem 0; border-bottom:1px solid rgba(255,255,255,0.06);">
+<div style="font-family:'Outfit',sans-serif; font-weight:500; font-size:0.88rem; color:#F0F0F0;">{bloc['label']}</div>
+<div style="font-family:'Outfit',sans-serif; font-size:0.8rem; color:#C8C8C8; margin-top:0.1rem;">{bloc['detail']}</div>
+<div style="display:flex; gap:1rem; margin-top:0.25rem; font-family:'Geist Mono',monospace; font-size:0.76rem; color:#9AA5BC;">
+<span>Allure : {bloc['allure']}</span>
+<span>Pace : {bloc['pace']}</span>
+</div>
+</div>""",
+                                        unsafe_allow_html=True,
+                                    )

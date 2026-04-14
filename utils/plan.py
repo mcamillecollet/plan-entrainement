@@ -2,6 +2,7 @@
 
 import pandas as pd
 from utils.constants import VOLUME_PIC_LIMITS
+from utils.session_mix import compute_sessions, get_phase_group
 
 
 def get_volume_pic_range(type_course, niveau):
@@ -39,6 +40,11 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic,
     - Peak           : semaine au volume maximum
     - Recovery       : descente progressive avant la course
     - Race Week      : semaine de course (~35% du volume pic)
+
+    Chaque ligne du DataFrame expose une colonne 'Séances' : liste de dicts
+    {type, label, km[, km_as]} produite par utils.session_mix.compute_sessions.
+    Le mix dépend à la fois du type de course, du nombre de sorties/semaine
+    et de la phase (base / specific / taper).
     """
     plan = []
 
@@ -91,78 +97,17 @@ def generer_plan_personnalise(niveau, type_course, volume_debut, volume_pic,
             volume_total = volume_pic * 0.35
             sem_type = 'Race Week'
 
-        is_long_run = (semaine % 2 == 1)
-        row = _repartir_seances(volume_total, sem_type, semaine, sorties_par_semaine, is_long_run)
-        plan.append(row)
+        phase_group = get_phase_group(sem_type, semaine, semaine_pic)
+        seances = compute_sessions(
+            volume_total, type_course, sorties_par_semaine, phase_group, semaine
+        )
+
+        plan.append({
+            'Semaine': semaine,
+            'Type': sem_type,
+            'Phase': phase_group,
+            'Volume total (km)': round(volume_total, 1),
+            'Séances': seances,
+        })
 
     return pd.DataFrame(plan)
-
-
-def _repartir_seances(volume_total, sem_type, semaine, sorties_par_semaine, is_long_run):
-    """
-    Répartit le volume total entre les séances selon le nombre de sorties par semaine.
-    Retourne un dict représentant une ligne du plan.
-    """
-    if sorties_par_semaine == 2:
-        quali_km = round(volume_total * 0.40, 1)
-        sortie_longue_km = round(volume_total * 0.60, 1)
-        if is_long_run:
-            as_km = round(sortie_longue_km * 0.15, 1)
-            detail = f"Long Run ({round(sortie_longue_km - as_km, 1)}) + AS ({as_km})"
-        else:
-            detail = f"EF ({sortie_longue_km})"
-        return {
-            'Semaine': semaine, 'Type': sem_type,
-            'Qualitative seuil/VMA (km)': quali_km,
-            'Sortie longue ou EF (km)': sortie_longue_km,
-            'Détail sortie longue': detail,
-            'Volume total (km)': round(volume_total, 1)
-        }
-
-    elif sorties_par_semaine == 3:
-        ef_km = round(volume_total * 0.25, 1)
-        quali_km = round(volume_total * 0.25, 1)
-        sortie_longue_km = round(volume_total * 0.50, 1)
-        as_km = round(sortie_longue_km * 0.15, 1)
-        return {
-            'Semaine': semaine, 'Type': sem_type,
-            'EF (km)': ef_km,
-            'Qualitative VMA/seuil/côtes (km)': quali_km,
-            'Sortie longue (km)': sortie_longue_km,
-            'dont AS (km)': as_km,
-            'Volume total (km)': round(volume_total, 1)
-        }
-
-    elif sorties_par_semaine == 4:
-        ef_km = round(volume_total * 0.20, 1)
-        quali1_km = round(volume_total * 0.15, 1)
-        quali2_km = round(volume_total * 0.15, 1)
-        sortie_longue_km = round(volume_total * 0.50, 1)
-        as_km = round(sortie_longue_km * 0.15, 1)
-        return {
-            'Semaine': semaine, 'Type': sem_type,
-            'EF (km)': ef_km,
-            'Qualitative 1 VMA (km)': quali1_km,
-            'Qualitative 2 seuil/côtes (km)': quali2_km,
-            'Sortie longue (km)': sortie_longue_km,
-            'dont AS (km)': as_km,
-            'Volume total (km)': round(volume_total, 1)
-        }
-
-    else:  # 5 sorties
-        ef1_km = round(volume_total * 0.15, 1)
-        ef2_km = round(volume_total * 0.15, 1)
-        vma_km = round(volume_total * 0.12, 1)
-        seuil_km = round(volume_total * 0.13, 1)
-        sortie_longue_km = round(volume_total * 0.45, 1)
-        as_km = round(sortie_longue_km * 0.15, 1)
-        return {
-            'Semaine': semaine, 'Type': sem_type,
-            'EF 1 (km)': ef1_km,
-            'EF 2 (km)': ef2_km,
-            'Qualitative VMA (km)': vma_km,
-            'Qualitative seuil/côtes (km)': seuil_km,
-            'Sortie longue (km)': sortie_longue_km,
-            'dont AS (km)': as_km,
-            'Volume total (km)': round(volume_total, 1)
-        }
