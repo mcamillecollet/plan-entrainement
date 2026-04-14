@@ -40,39 +40,39 @@ SESSION_MIX_TEMPLATES = {
     # ---------- 5 km ----------
     ("5km", 2): {
         PHASE_BASE:     [(VMA, 0.40), (SL, 0.60)],
-        PHASE_SPECIFIC: [(VMA, 0.40), (SL, 0.60)],
+        PHASE_SPECIFIC: [(AS,  0.40), (SL, 0.60)],
         PHASE_TAPER:    [(VMA, 0.35), (EF, 0.65)],
     },
     ("5km", 3): {
-        PHASE_BASE:     [(EF, 0.30), (VMA, 0.25), (SL, 0.45)],
-        PHASE_SPECIFIC: [(EF, 0.25), (VMA, 0.25), (SL, 0.50)],
+        PHASE_BASE:     [(EF, 0.30), (VMA, 0.30), (SL, 0.40)],
+        PHASE_SPECIFIC: [(EF, 0.25), (AS,  0.30), (SL, 0.45)],
         PHASE_TAPER:    [(EF, 0.40), (VMA, 0.25), (EF, 0.35)],
     },
     ("5km", 4): {
         PHASE_BASE:     [(EF, 0.25), (VMA, 0.20), (SEUIL, 0.15), (SL, 0.40)],
-        PHASE_SPECIFIC: [(EF, 0.20), (VMA, 0.20), (SEUIL, 0.15), (SL, 0.45)],
-        PHASE_TAPER:    [(EF, 0.35), (VMA, 0.20), (AS, 0.10), (EF, 0.35)],
+        PHASE_SPECIFIC: [(EF, 0.20), (VMA, 0.15), (AS,    0.20), (SL, 0.45)],
+        PHASE_TAPER:    [(EF, 0.35), (VMA, 0.20), (AS,    0.10), (EF, 0.35)],
     },
     ("5km", 5): {
         PHASE_BASE:     [(EF, 0.20), (EF, 0.15), (VMA, 0.20), (SEUIL, 0.15), (SL, 0.30)],
-        PHASE_SPECIFIC: [(EF, 0.20), (EF, 0.15), (VMA, 0.20), (SEUIL, 0.15), (SL, 0.30)],
-        PHASE_TAPER:    [(EF, 0.30), (EF, 0.20), (VMA, 0.15), (AS, 0.10), (EF, 0.25)],
+        PHASE_SPECIFIC: [(EF, 0.20), (EF, 0.15), (VMA, 0.15), (AS,    0.20), (SL, 0.30)],
+        PHASE_TAPER:    [(EF, 0.30), (EF, 0.20), (VMA, 0.15), (AS,    0.10), (EF, 0.25)],
     },
     # ---------- 10 km ----------
     ("10km", 3): {
         PHASE_BASE:     [(EF, 0.25), (VMA, 0.25), (SL, 0.50)],
-        PHASE_SPECIFIC: [(EF, 0.20), (SEUIL, 0.25), (SL, 0.55)],
-        PHASE_TAPER:    [(EF, 0.40), (VMA, 0.20), (EF, 0.40)],
+        PHASE_SPECIFIC: [(EF, 0.25), (AS,  0.25), (SL, 0.50)],
+        PHASE_TAPER:    [(EF, 0.40), (AS,  0.25), (EF, 0.35)],
     },
     ("10km", 4): {
         PHASE_BASE:     [(EF, 0.25), (VMA, 0.15), (SEUIL, 0.15), (SL, 0.45)],
-        PHASE_SPECIFIC: [(EF, 0.20), (VMA, 0.15), (SEUIL, 0.15), (SL, 0.50)],
-        PHASE_TAPER:    [(EF, 0.35), (VMA, 0.15), (AS, 0.15), (EF, 0.35)],
+        PHASE_SPECIFIC: [(EF, 0.20), (SEUIL, 0.15), (AS, 0.20), (SL, 0.45)],
+        PHASE_TAPER:    [(EF, 0.35), (SEUIL, 0.10), (AS, 0.20), (EF, 0.35)],
     },
     ("10km", 5): {
         PHASE_BASE:     [(EF, 0.20), (EF, 0.15), (VMA, 0.12), (SEUIL, 0.13), (SL, 0.40)],
-        PHASE_SPECIFIC: [(EF, 0.15), (EF, 0.15), (VMA, 0.12), (SEUIL, 0.13), (SL, 0.45)],
-        PHASE_TAPER:    [(EF, 0.30), (EF, 0.20), (VMA, 0.10), (AS, 0.15), (EF, 0.25)],
+        PHASE_SPECIFIC: [(EF, 0.15), (EF, 0.15), (SEUIL, 0.12), (AS, 0.18), (SL, 0.40)],
+        PHASE_TAPER:    [(EF, 0.30), (EF, 0.20), (SEUIL, 0.10), (AS, 0.15), (EF, 0.25)],
     },
     # ---------- Semi-marathon ----------
     ("Semi-marathon", 3): {
@@ -106,6 +106,18 @@ SESSION_MIX_TEMPLATES = {
         PHASE_SPECIFIC: [(EF, 0.15), (EF, 0.15), (SEUIL, 0.10), (AS, 0.10), (SL, 0.50)],
         PHASE_TAPER:    [(EF, 0.25), (EF, 0.20), (SEUIL, 0.10), (AS, 0.20), (EF, 0.25)],
     },
+}
+
+# --- Plafonds absolus de sortie longue par type de course (en km) ---
+# Au-delà, la SL est cappée et le surplus est réalloué sur l'EF la plus volumineuse
+# du mix afin de conserver le volume hebdo total. Les valeurs visent à garder une
+# SL cohérente avec la distance cible (pas plus de ~2x la distance course pour 5K/10K,
+# ~1.2x pour le semi, ~0.75x pour le marathon).
+SL_MAX_KM = {
+    "5km":           12,
+    "10km":          18,
+    "Semi-marathon": 25,
+    "Marathon":      32,
 }
 
 # --- Template dédié à la semaine de course : 2 séances max quel que soit n_sessions ---
@@ -239,5 +251,23 @@ def compute_sessions(volume_total, race_type, n_sessions, phase_group, semaine):
             session.pop("km_as", None)
 
         sessions.append(session)
+
+    # --- Cap absolu de la sortie longue ---
+    # Si la SL calculée dépasse le plafond pour ce type de course, on la borne et on
+    # redistribue le surplus sur la plus grosse séance d'EF du mix (pour conserver
+    # le volume total hebdo). Ne s'applique qu'aux séances encore de type SL
+    # (exclut donc le cas 2 sorties/semaine converti en EF longue ci-dessus).
+    sl_max = SL_MAX_KM.get(race_type)
+    if sl_max is not None:
+        for s in sessions:
+            if s["type"] == SL and s["km"] > sl_max:
+                overflow = round(s["km"] - sl_max, 1)
+                s["km"] = float(sl_max)
+                if "km_as" in s:
+                    s["km_as"] = round(sl_max * 0.15, 1)
+                ef_sessions = [x for x in sessions if x["type"] == EF]
+                if ef_sessions:
+                    biggest_ef = max(ef_sessions, key=lambda x: x["km"])
+                    biggest_ef["km"] = round(biggest_ef["km"] + overflow, 1)
 
     return sessions

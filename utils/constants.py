@@ -17,10 +17,10 @@ CHART_HIGHLIGHT = "#D04D46"
 VOLUME_PIC_LIMITS = {
     ("5km", "Débutant"):                (10, 20),
     ("5km", "Intermédiaire"):           (20, 30),
-    ("5km", "Avancé"):                  (30, 40),
+    ("5km", "Avancé"):                  (30, 50),
     ("10km", "Débutant"):               (20, 30),
     ("10km", "Intermédiaire"):          (30, 45),
-    ("10km", "Avancé"):                 (45, 60),
+    ("10km", "Avancé"):                 (45, 70),
     ("Semi-marathon", "Débutant"):      (25, 40),
     ("Semi-marathon", "Intermédiaire"): (40, 60),
     ("Semi-marathon", "Avancé"):        (60, 80),

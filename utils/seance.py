@@ -67,38 +67,86 @@ def _warmup_km(km, actual_body_km):
     return max(_MIN_WARMUP_KM, round(km - actual_body_km - _COOLDOWN_KM, 1))
 
 
-def _pattern_vma(body_target):
+def _pattern_vma(body_target, race_type):
     """
-    Pattern VMA adapté au volume de corps visé. Retourne (label, detail, actual_km).
-    Les tailles de répétition sont choisies pour rester physiologiquement pertinentes :
-    200 m pour des séances très courtes, 1500 m pour les longues.
+    Pattern VMA adapté au volume de corps visé ET au type de course.
+    - 5K             : intervalles courts/moyens (200-1000 m), on n'étire pas au-delà.
+    - 10K            : intervalles moyens (400-1500 m).
+    - Semi / Marathon : intervalles longs (1000-2000 m) pour un travail VO2 long.
+    Retourne (label, detail, actual_km).
     """
-    if body_target <= 2.0:
-        n = max(6, round(body_target * 5))
-        return (
-            f"{n} × 200 m",
-            "récup : 1 min trot entre les répétitions",
-            round(n * 0.2, 1),
-        )
-    if body_target <= 4.0:
-        n = max(5, round(body_target * 2.5))
-        return (
-            f"{n} × 400 m",
-            "récup : 1 min trot entre les répétitions",
-            round(n * 0.4, 1),
-        )
-    if body_target <= 7.5:
+    if race_type == "5km":
+        if body_target <= 2.0:
+            n = max(6, round(body_target * 5))
+            return (
+                f"{n} × 200 m",
+                "récup : 1 min trot entre les répétitions",
+                round(n * 0.2, 1),
+            )
+        if body_target <= 4.0:
+            n = max(5, round(body_target * 2.5))
+            return (
+                f"{n} × 400 m",
+                "récup : 1 min trot entre les répétitions",
+                round(n * 0.4, 1),
+            )
+        # Plafond 1000 m pour le 5K
         n = max(4, round(body_target))
         return (
             f"{n} × 1000 m",
             "récup : 2 min trot entre les répétitions",
             round(n * 1.0, 1),
         )
-    n = max(5, round(body_target / 1.5))
+
+    if race_type == "10km":
+        if body_target <= 2.0:
+            n = max(5, round(body_target * 2.5))
+            return (
+                f"{n} × 400 m",
+                "récup : 1 min trot entre les répétitions",
+                round(n * 0.4, 1),
+            )
+        if body_target <= 5.0:
+            n = max(5, round(body_target / 0.8))
+            return (
+                f"{n} × 800 m",
+                "récup : 1 min 30 trot entre les répétitions",
+                round(n * 0.8, 1),
+            )
+        if body_target <= 8.0:
+            n = max(4, round(body_target))
+            return (
+                f"{n} × 1000 m",
+                "récup : 2 min trot entre les répétitions",
+                round(n * 1.0, 1),
+            )
+        n = max(4, round(body_target / 1.5))
+        return (
+            f"{n} × 1500 m",
+            "récup : 2 min 30 trot entre les répétitions",
+            round(n * 1.5, 1),
+        )
+
+    # Semi-marathon / Marathon : reps longues VO2-long
+    if body_target <= 4.0:
+        n = max(4, round(body_target))
+        return (
+            f"{n} × 1000 m",
+            "récup : 2 min trot entre les répétitions",
+            round(n * 1.0, 1),
+        )
+    if body_target <= 9.0:
+        n = max(4, round(body_target / 1.5))
+        return (
+            f"{n} × 1500 m",
+            "récup : 2 min 30 trot entre les répétitions",
+            round(n * 1.5, 1),
+        )
+    n = max(4, round(body_target / 2.0))
     return (
-        f"{n} × 1500 m",
-        "récup : 2 min 30 trot entre les répétitions",
-        round(n * 1.5, 1),
+        f"{n} × 2000 m",
+        "récup : 3 min trot entre les répétitions",
+        round(n * 2.0, 1),
     )
 
 
@@ -145,20 +193,46 @@ def _pattern_as(body_target, race_type):
     Retourne (label, detail, actual_km).
     """
     if race_type == "5km":
+        if body_target <= 3.0:
+            n = max(4, round(body_target / 0.5))
+            return (
+                f"{n} × 500 m à allure 5K",
+                "récup : 1 min trot — précision d'allure",
+                round(n * 0.5, 1),
+            )
+        if body_target <= 5.0:
+            n = max(4, round(body_target))
+            return (
+                f"{n} × 1 km à allure 5K",
+                "récup : 1 min trot entre les blocs",
+                round(n * 1.0, 1),
+            )
         rep_km = round(body_target / 3, 1)
-        actual = round(3 * rep_km, 1)
         return (
             f"3 × {rep_km:.1f} km à allure 5K",
-            "récup : 1 min trot entre les blocs",
-            actual,
+            "récup : 1 min 30 trot entre les blocs",
+            round(3 * rep_km, 1),
         )
     if race_type == "10km":
+        if body_target <= 4.0:
+            n = max(3, round(body_target))
+            return (
+                f"{n} × 1 km à allure 10K",
+                "récup : 1 min 30 trot entre les blocs",
+                round(n * 1.0, 1),
+            )
+        if body_target <= 7.0:
+            rep_km = round(body_target / 3, 1)
+            return (
+                f"3 × {rep_km:.1f} km à allure 10K",
+                "récup : 2 min trot entre les blocs",
+                round(3 * rep_km, 1),
+            )
         rep_km = round(body_target / 2, 1)
-        actual = round(2 * rep_km, 1)
         return (
             f"2 × {rep_km:.1f} km à allure 10K",
             "récup : 2 min trot entre les blocs",
-            actual,
+            round(2 * rep_km, 1),
         )
     if race_type == "Semi-marathon":
         rep_km = round(body_target / 2, 1)
@@ -210,7 +284,7 @@ def generer_seance_detaillee(seance, vdot, race_type, phase_group):
     if t == SL:
         return _seance_sl(seance, km, km_as, allures)
     if t == VMA:
-        return _seance_vma(seance, km, allures, phase_group)
+        return _seance_vma(seance, km, allures, phase_group, race_type)
     if t == SEUIL:
         return _seance_seuil(seance, km, allures, phase_group)
     if t == AS:
@@ -275,7 +349,7 @@ def _seance_sl(seance, km, km_as, allures):
     }
 
 
-def _seance_vma(seance, km, allures, phase_group):
+def _seance_vma(seance, km, allures, phase_group, race_type):
     retour_km = _COOLDOWN_KM
 
     # Race week : stimulus court et non traumatisant, quel que soit le volume.
@@ -287,7 +361,7 @@ def _seance_vma(seance, km, allures, phase_group):
         actual_body_km = 1.2
     else:
         body_target = _body_target(km)
-        body_label, body_detail, actual_body_km = _pattern_vma(body_target)
+        body_label, body_detail, actual_body_km = _pattern_vma(body_target, race_type)
 
     ech_km = _warmup_km(km, actual_body_km)
 
