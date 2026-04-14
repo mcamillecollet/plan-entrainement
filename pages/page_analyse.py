@@ -1,11 +1,12 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
-from shared import (inject_css, style_ax, analyser_gpx,
-                    CHART_LINE_ASCENT, CHART_LINE_DESCENT,
-                    CHART_FILL_ASCENT, CHART_FILL_DESCENT, CHART_HIGHLIGHT)
+from utils import (
+    inject_css, style_ax, analyser_gpx,
+    CHART_LINE_ASCENT, CHART_LINE_DESCENT,
+    CHART_FILL_ASCENT, CHART_FILL_DESCENT, CHART_HIGHLIGHT
+)
 
 
 def render():
@@ -50,7 +51,6 @@ def render():
 
             y_min_data, y_max_data = df['elevation'].min(), df['elevation'].max()
             data_range = y_max_data - y_min_data if y_max_data != y_min_data else 100
-
             total_dist = df['cum_distance'].iloc[-1]
             label_offset = data_range * 0.08
             min_gap_x = total_dist * 0.07
@@ -61,8 +61,7 @@ def render():
                 mid = (cote['start_km'] + cote['end_km']) / 2
                 mask = (df['cum_distance'] >= cote['start_km']) & (df['cum_distance'] <= cote['end_km'])
                 max_elev = df.loc[mask, 'elevation'].max()
-                y_label = max_elev + label_offset
-                cote_labels.append((cote, mid, y_label))
+                cote_labels.append((cote, mid, max_elev + label_offset))
 
             for i in range(1, len(cote_labels)):
                 cote_i, x_i, y_i = cote_labels[i]
@@ -76,7 +75,6 @@ def render():
             y_top = max_y_label + data_range * 0.15
             y_bottom = y_min_data - data_range * 0.05
             ax.set_ylim(y_bottom, y_top)
-
             ax.fill_between(df['cum_distance'], df['elevation'], y_bottom, color=CHART_FILL_ASCENT, alpha=0.06)
 
             for cote, mid, y_label in cote_labels:
@@ -91,7 +89,6 @@ def render():
             ax.set_xlim(0, total_dist)
             ax.set_xlabel("Distance (km)", fontsize=10)
             ax.set_ylabel("Altitude (m)", fontsize=10)
-            ax.set_title("")
 
             for cote, mid, y_label in cote_labels:
                 ax.text(mid, y_label, f"{cote['pente_pct']}%",
@@ -125,7 +122,6 @@ def render():
 
                 y_min_d, y_max_d = df['elevation'].min(), df['elevation'].max()
                 data_range_d = y_max_d - y_min_d if y_max_d != y_min_d else 100
-
                 total_dist_d = df['cum_distance'].iloc[-1]
                 label_offset_d = data_range_d * 0.08
                 min_gap_x_d = total_dist_d * 0.07
@@ -136,8 +132,7 @@ def render():
                     mid = (desc['start_km'] + desc['end_km']) / 2
                     mask = (df['cum_distance'] >= desc['start_km']) & (df['cum_distance'] <= desc['end_km'])
                     max_elev = df.loc[mask, 'elevation'].max()
-                    y_label = max_elev + label_offset_d
-                    desc_labels.append((desc, mid, y_label))
+                    desc_labels.append((desc, mid, max_elev + label_offset_d))
 
                 for i in range(1, len(desc_labels)):
                     desc_i, x_i, y_i = desc_labels[i]
@@ -151,7 +146,6 @@ def render():
                 y_top_d = max_y_label_d + data_range_d * 0.15
                 y_bottom_d = y_min_d - data_range_d * 0.05
                 ax3.set_ylim(y_bottom_d, y_top_d)
-
                 ax3.fill_between(df['cum_distance'], df['elevation'], y_bottom_d, color=CHART_FILL_DESCENT, alpha=0.06)
 
                 for desc, mid, y_label in desc_labels:
@@ -166,7 +160,6 @@ def render():
                 ax3.set_xlim(0, total_dist_d)
                 ax3.set_xlabel("Distance (km)", fontsize=10)
                 ax3.set_ylabel("Altitude (m)", fontsize=10)
-                ax3.set_title("")
 
                 for desc, mid, y_label in desc_labels:
                     ax3.text(mid, y_label, f"({desc['pente_pct']})%",

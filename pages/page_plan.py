@@ -1,13 +1,14 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
-from shared import (inject_css, style_ax, parse_chrono, estimer_vdot,
-                    allures_from_vdot, format_pace, generer_plan_personnalise,
-                    get_volume_pic_range,
-                    COLOR_PRIMARY, COLOR_SECONDARY,
-                    CHART_LINE_ASCENT, CHART_LINE_DESCENT)
+from utils import (
+    inject_css, style_ax, parse_chrono, estimer_vdot,
+    allures_from_vdot, format_pace, generer_plan_personnalise,
+    get_volume_pic_range,
+    COLOR_PRIMARY, COLOR_SECONDARY,
+    CHART_LINE_ASCENT, CHART_LINE_DESCENT
+)
 
 
 def render():
@@ -42,7 +43,6 @@ def render():
 
     st.markdown('<p class="section-label">Param\u00e8tres du plan d\'entra\u00eenement</p>', unsafe_allow_html=True)
 
-    # Initialiser les valeurs par défaut en session state
     defaults = {
         'p_niveau': 0, 'p_type_course': 0, 'p_chrono_actuel': '',
         'p_chrono_cible': '', 'p_duree_semaine': 6, 'p_sorties': 1,
@@ -67,7 +67,6 @@ def render():
         duree_semaine = st.selectbox("Dur\u00e9e du plan (semaines)", durees, key="p_duree_semaine")
         sorties_par_semaine = st.selectbox("Sorties par semaine", sorties_options, key="p_sorties")
 
-        # Volumes dynamiques selon le niveau et le type de course
         pic_min, pic_max = get_volume_pic_range(type_course, niveau)
         volumes_debut = list(range(5, pic_min + 1, 5))
         volumes_pic = list(range(pic_min, pic_max + 1, 5))
@@ -148,7 +147,6 @@ def render():
                 with cols_zones[idx]:
                     allures = allures_from_vdot(vdot)
                     st.markdown(f'<p class="section-label">Zones d\'allure \u2013 {label}</p>', unsafe_allow_html=True)
-
                     for nom, (pace_fast, pace_slow) in allures.items():
                         vitesse_fast = round(60 / pace_fast, 1) if pace_fast else None
                         vitesse_slow = round(60 / pace_slow, 1) if pace_slow else None
@@ -172,7 +170,6 @@ def render():
                           </span>
                         </div>
                         """, unsafe_allow_html=True)
-
             st.markdown("")
 
     # --- Génération du plan ---
@@ -193,14 +190,19 @@ def render():
         ax2.fill_between(plan_df['Semaine'], plan_df['Volume total (km)'],
                          alpha=0.06, color='#3C3C3C')
 
-        colors_type = {'Under progress': CHART_LINE_ASCENT, 'Cool down': '#B0B0B0', 'Peak': '#CE0058', 'Recovery': COLOR_SECONDARY, 'Race Week': '#7AC4B7'}
+        colors_type = {
+            'Under progress': CHART_LINE_ASCENT,
+            'Cool down': '#B0B0B0',
+            'Peak': '#CE0058',
+            'Recovery': COLOR_SECONDARY,
+            'Race Week': '#7AC4B7'
+        }
         for t, color in colors_type.items():
             mask = plan_df['Type'] == t
             if mask.any():
                 ax2.scatter(plan_df.loc[mask, 'Semaine'], plan_df.loc[mask, 'Volume total (km)'],
                             color=color, s=50, zorder=5, edgecolors='none', label=t)
 
-        # Bande colorée sous l'axe X pour visualiser les phases
         y_min = ax2.get_ylim()[0]
         bar_height = (ax2.get_ylim()[1] - y_min) * 0.04
         for _, row in plan_df.iterrows():
@@ -235,7 +237,6 @@ def render():
             vol = row['Volume total (km)']
             color = colors_type.get(sem_type, '#B0B0B0')
 
-            # Construire la liste des s\u00e9ances
             rows = []
             if sorties_par_semaine == 2:
                 rows.append(session_row('Seuil / VMA', row['Qualitative seuil/VMA (km)']))
@@ -254,7 +255,6 @@ def render():
                 rows.append(session_row(f'Sortie longue <span style="opacity:0.55;font-size:0.72rem;">(dont AS {as_km} km)</span>', row['Sortie longue (km)'], last=True))
 
             seances_html = "\n".join(rows)
-
             cards_html.append(f"""<div style="background:#3A3A3A; border-left:4px solid {color}; border-radius:8px; padding:1rem 1.2rem;">
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
 <span style="font-family:'Outfit',sans-serif; font-weight:600; font-size:1rem; color:#F0F0F0;">Semaine {sem} <span style="font-weight:400; font-size:0.78rem; color:{color}; margin-left:0.5rem; text-transform:uppercase; letter-spacing:0.06em;">{sem_type}</span></span>
