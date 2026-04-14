@@ -117,7 +117,7 @@ SL_MAX_KM = {
     "5km":           12,
     "10km":          18,
     "Semi-marathon": 25,
-    "Marathon":      32,
+    "Marathon":      35,
 }
 
 # --- Template dédié à la semaine de course : 2 séances max quel que soit n_sessions ---
